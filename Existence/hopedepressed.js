@@ -1,0 +1,141 @@
+import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
+import { RGBELoader  } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/RGBELoader.js';
+import { EffectComposer } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/postprocessing/RenderPass.js';
+import { AfterimagePass } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/postprocessing/AfterimagePass.js';
+import { UnrealBloomPass } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { FBXLoader } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/FBXLoader.js';
+
+let composer;
+let body_01_mixer, eyes_01_mixer;
+let body_01, eyes_01;
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+const clock = new THREE.Clock();
+renderer.setClearColor(0x11151c);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+
+const hdrEquirect = new RGBELoader().load('https://miroleon.github.io/daily-assets/gradient.hdr', function () {
+  hdrEquirect.mapping = THREE.EquirectangularReflectionMapping;
+});
+scene.environment = hdrEquirect;
+
+const camera = new THREE.PerspectiveCamera(18.5, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 10, 45);
+camera.lookAt(0, 6.5, 0);
+
+// Cores do degradê do corpo
+const whiteColor = new THREE.Color(0xffffff);
+const blackColor = new THREE.Color(0x000000);
+
+// Materiais
+const blob_mat = new THREE.MeshPhysicalMaterial({
+  color: whiteColor.clone(),
+  roughness: 0.3,
+  metalness: 0,
+  envMap: hdrEquirect,
+  envMapIntensity: 0.5
+});
+
+const uni_mat = new THREE.MeshPhysicalMaterial({
+  envMap: hdrEquirect,
+  envMapIntensity: 10, // brilho inicial dos olhos
+  emissive: 0x11151c
+});
+
+const scale = 0.03;
+const loader = new FBXLoader();
+
+// Carrega corpo
+body_01 = await loader.loadAsync('https://miroleon.github.io/daily-assets/body_03.fbx');
+body_01_mixer = new THREE.AnimationMixer(body_01);
+const body_01_action = body_01_mixer.clipAction(body_01.animations[0]);
+body_01_action.play();
+
+body_01.traverse(child => {
+  if (child.isMesh) child.material = blob_mat;
+});
+body_01.position.set(0, -5, 0);
+body_01.scale.setScalar(scale);
+scene.add(body_01);
+
+// Carrega olhos
+eyes_01 = await loader.loadAsync('https://miroleon.github.io/daily-assets/eyes_03.fbx');
+eyes_01_mixer = new THREE.AnimationMixer(eyes_01);
+const eyes_01_action = eyes_01_mixer.clipAction(eyes_01.animations[0]);
+eyes_01_action.play();
+
+eyes_01.traverse(child => {
+  if (child.isMesh) child.material = uni_mat;
+});
+eyes_01.position.set(0, -5, 0);
+eyes_01.scale.setScalar(scale);
+scene.add(eyes_01);
+
+// Névoa
+scene.fog = new THREE.FogExp2(0x11151c, 0.015);
+
+// Pós-processamento
+const renderScene = new RenderPass(scene, camera);
+const afterimagePass = new AfterimagePass();
+afterimagePass.uniforms['damp'].value = 0.85;
+
+const bloomparams = {
+  bloomStrength: 1.35,
+  bloomThreshold: 0.1,
+  bloomRadius: 1,
+};
+
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight));
+bloomPass.threshold = bloomparams.bloomThreshold;
+bloomPass.strength = bloomparams.bloomStrength;
+bloomPass.radius = bloomparams.bloomRadius;
+
+composer = new EffectComposer(renderer);
+composer.addPass(renderScene);
+composer.addPass(afterimagePass);
+composer.addPass(bloomPass);
+
+window.addEventListener('resize', onWindowResize);
+
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+// Progresso da transformação
+let colorProgress = 0;
+const transitionSpeed = 0.10; // sincroniza ambos
+
+function animate() {
+  const delta = clock.getDelta();
+
+  // Atualiza animações
+  if (body_01_mixer) body_01_mixer.update(delta / 2);
+  if (eyes_01_mixer) eyes_01_mixer.update(delta / 2);
+
+  // Move modelos
+  if (body_01 && eyes_01) {
+    body_01.position.z -= delta * 5.5;
+    eyes_01.position.z -= delta * 5.5;
+  }
+
+  // Atualiza cor e brilho
+  if (colorProgress < 1) {
+    colorProgress += delta * transitionSpeed;
+    blob_mat.color.lerp(blackColor, delta * transitionSpeed);
+
+    // brilho decrescendo de 9 para 1
+    const newIntensity = THREE.MathUtils.lerp(10, 0, colorProgress);
+    uni_mat.envMapIntensity = newIntensity;
+  }
+
+  composer.render();
+  requestAnimationFrame(animate);
+}
+
+requestAnimationFrame(animate);

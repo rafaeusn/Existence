@@ -1,0 +1,153 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
+
+@font-face {
+  font-family: 'Fonte1';
+  src: url('./fonts/DisketmonoBold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Fonte2';
+  src: url('./fonts/DisketmonoRegular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+html, body {
+  margin: 0;
+  overflow: hidden;
+  background-color: #11151c;
+  font-family: 'Open Sans', sans-serif;
+  color: white;
+}
+
+#canvas {
+  height: 100%;
+  width: 100%;
+  z-index: 0;
+}
+
+.text-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  top: 10%;
+  height: 80%;
+  width: 100%;
+  position: fixed;
+  left: 0;
+  z-index: 1;
+}
+
+.title {
+  font-family: 'Fonte1', sans-serif;
+  font-size: 2.5rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.3rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+#preloader {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; 
+  width: 100%; height: 100%;
+  background: #11151c;
+  color: white;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Fonte2', sans-serif;
+  font-size: 1.5rem;
+  z-index: 9999;
+  font-weight: 800;
+  display: flex; 
+  text-transform: uppercase;
+}
+
+
+/* Menu interativo */
+
+.menu {
+  position: absolute;
+  top: 45%;
+  width: 100%;
+  text-align: center;
+  z-index: 2;
+}
+
+.menu button {
+  margin: 0 12px;
+   padding: 16px 32px;       /* aumentar padding para ficar maior */
+  font-size: 1rem;
+  font-family: 'Fonte2', monospace;
+  color: #fff;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.15rem;
+}
+
+.menu button:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+.memory {
+  transition: opacity 0.3s ease;
+}
+
+/* Container Sobre */
+
+.about-container {
+  position: absolute;
+  top: 50%;
+  left: 20%;
+  transform: translate(-50%, -50%) scale(0.95);
+  background: rgba(17, 21, 28, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 20px 30px;
+  z-index: 3;
+  color: white;
+  font-size: 0.95rem;
+  width: 100%;
+  max-width: 500px;
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  display: block; /* Mantemos block, controlamos visibilidade via classe */
+}
+
+.about-container.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.about-content p {
+  font-family: 'Open Sans', sans-serif;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.about-content button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  font-family: 'Fonte2', monospace;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.about-content button:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.5);
+}
