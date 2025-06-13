@@ -7,6 +7,7 @@ import { UnrealBloomPass } from 'https://cdn.skypack.dev/three@0.136.0/examples/
 import { FBXLoader } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/FBXLoader.js';
 
 
+
 export default class HopeGameplay {
   constructor(canvasId = 'canvas') {
     this.canvas = document.getElementById(canvasId);
