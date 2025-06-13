@@ -69,13 +69,16 @@ export default class HopeGameplay {
     // Configura pós-processamento
     this.setupPostProcessing();
 
-    // Event listeners
-    window.addEventListener('resize', this.onWindowResize.bind(this));
-    this.canvas.addEventListener('click', (event) => this.onPointerClick(event), false);
 
     // Inicia UI e jogo
-    this.memorySystem = new MemorySystem(this.scene, this.camera, this.renderer);
+    this.memorySystem = new MemorySystem(this.scene, this.camera, this.renderer, this.composer);
+
     this.memorySystem.createScoreDisplay();
+
+    
+    // Event listeners
+    window.addEventListener('resize', this.onWindowResize.bind(this));
+    window.addEventListener('click', (event) => this.memorySystem.onPointerClick(event));
 
 
     // Inicia animação

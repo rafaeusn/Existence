@@ -5,10 +5,11 @@ import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
 
 
 export default class MemorySystem {
-    constructor(scene, camera, renderer) {
+    constructor(scene, camera, renderer, composer) {
         this.scene = scene;
         this.camera = camera;
         this.renderer = renderer;
+        this.composer = composer;
         this.score = 0;
         this.badMemories = 0;
         this.gameDuration = 60 * 1000; // 1 minuto
@@ -18,6 +19,8 @@ export default class MemorySystem {
         this.memories = [];
         this.memorySpawner = null;
         this.gameTimer = null;
+        this.pointer = new THREE.Vector2();
+
         
         // Texto para mostrar score
         this.createScoreDisplay();
