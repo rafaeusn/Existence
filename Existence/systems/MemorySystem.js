@@ -1,4 +1,9 @@
 // systems/MemorySystem.js
+
+import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
+
+
+
 export default class MemorySystem {
     constructor(scene, camera, renderer) {
         this.scene = scene;
@@ -17,164 +22,273 @@ export default class MemorySystem {
         // Texto para mostrar score
         this.createScoreDisplay();
     }
-
-    createScoreDisplay() {
-        const scoreDiv = document.createElement('div');
-        scoreDiv.id = 'game-ui';
-        scoreDiv.style.position = 'absolute';
-        scoreDiv.style.top = '20px';
-        scoreDiv.style.left = '20px';
-        scoreDiv.style.color = 'white';
-        scoreDiv.style.fontFamily = 'Arial';
-        scoreDiv.style.fontSize = '24px';
-        scoreDiv.style.zIndex = '10';
-        scoreDiv.innerHTML = `Memórias Boas: ${this.score} | Ruins: ${this.badMemories}`;
-        document.body.appendChild(scoreDiv);
+  createScoreDisplay() {
+    if (this.scoreDisplay) {
+      document.body.removeChild(this.scoreDisplay);
     }
+    
+    this.scoreDisplay = document.createElement('div');
+    this.scoreDisplay.id = 'game-ui';
+    this.scoreDisplay.style.position = 'absolute';
+    this.scoreDisplay.style.top = '20px';
+    this.scoreDisplay.style.left = '20px';
+    this.scoreDisplay.style.color = 'white';
+    this.scoreDisplay.style.fontFamily = 'Arial';
+    this.scoreDisplay.style.fontSize = '24px';
+    this.scoreDisplay.style.zIndex = '10';
+    this.scoreDisplay.style.textShadow = '0 0 5px rgba(0,0,0,0.5)';
+    this.scoreDisplay.style.pointerEvents = 'none';
+    this.updateScoreDisplay();
+    document.body.appendChild(this.scoreDisplay);
+  }
 
-    updateScoreDisplay() {
-        const scoreDiv = document.getElementById('game-ui');
-        if (scoreDiv) {
-            scoreDiv.innerHTML = `Memórias Boas: ${this.score} | Ruins: ${this.badMemories}`;
-        }
+  updateScoreDisplay() {
+    if (this.scoreDisplay) {
+      this.scoreDisplay.innerHTML = `Memórias Boas: ${this.score} | Ruins: ${this.badMemories}`;
     }
+  }
 
-    spawnMemory() {
-        if (this.gameOver) return;
+  onPointerClick(event) {
+    this.pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+    this.pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
+    this.checkMemoryIntersection();
+  }
 
-        // Cria um plano 2D (sprite) para a memória
-        const textureLoader = new THREE.TextureLoader();
-        const isGood = Math.random() > 0.3;
-        const texture = textureLoader.load(isGood ? 'assets/memorygood.png' : 'assets/memorybad.png');
-        
-        const material = new THREE.SpriteMaterial({ 
-            map: texture,
-            transparent: true
-        });
-        
-        const memory = new THREE.Sprite(material);
-        memory.scale.set(1, 1, 1);
-        
-        // Posição aleatória na tela (em coordenadas do mundo 3D)
-        const x = (Math.random() - 0.5) * 20;
-        const y = (Math.random() - 0.5) * 10;
-        memory.position.set(x, y, -5);
-        
-        this.scene.add(memory);
-        
-        // Configura timeout para remoção
-        const timeout = setTimeout(() => {
-            this.scene.remove(memory);
-            this.memories = this.memories.filter(m => m !== memory);
-        }, this.memoryLifetime);
-
-        // Armazena referência para interação
-        this.memories.push({
-            object: memory,
-            isGood,
-            timeout
-        });
+  checkMemoryIntersection() {
+    if (this.gameOver) return;
+    
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(this.pointer, this.camera);
+    
+    const intersects = raycaster.intersectObjects(
+      this.memories.map(m => m.object)
+    );
+    
+    if (intersects.length > 0) {
+      const memory = this.memories.find(
+        m => m.object === intersects[0].object
+      );
+      this.collectMemory(memory);
     }
+  }
 
-    checkIntersection(pointer) {
-        const raycaster = new THREE.Raycaster();
-        raycaster.setFromCamera(pointer, this.camera);
-        
-        const intersects = raycaster.intersectObjects(
-            this.memories.map(m => m.object)
-        );
-        
-        if (intersects.length > 0) {
-            const memoryObj = this.memories.find(
-                m => m.object === intersects[0].object
-            );
-            
-            this.handleMemoryClick(memoryObj);
-        }
+spawnMemory() {
+  if (this.gameOver) return;
+
+  const isGood = Math.random() > 0.3;
+  const texturePath = isGood ? 
+    './assets/memorygood.png' : 
+    './assets/memorybad.png';
+
+  // DEBUG: Mostra o caminho real no console
+  console.log("Carregando textura:", texturePath);
+
+  const textureLoader = new THREE.TextureLoader();
+  textureLoader.load(texturePath, (texture) => {
+    const material = new THREE.SpriteMaterial({ 
+      map: texture,
+      transparent: true, // DEVE estar ativado!
+      opacity: 0.9,
+      depthTest: false // Adicione isto
+    });
+    
+    const memory = new THREE.Sprite(material);
+
+    // DEBUG: Verifica se a textura carregou
+    console.log("Textura carregada:", texture);
+    
+    // Apenas uma definição de escala!
+    memory.scale.set(50, 50, 1);
+    
+    // Posição melhorada
+    memory.position.set(
+      (Math.random() - 0.5) * 8, // -4 a 4
+      (Math.random() - 0.5) * 8, // -4 a 4
+      -5 // IMPORTANTE: coloca na frente da cena
+    );
+
+    this.scene.add(memory);
+    this.animateMemoryAppear(memory);
+
+    const timeout = setTimeout(() => {
+      this.removeMemory({ object: memory });
+    }, this.memoryLifetime);
+
+    this.memories.push({
+      object: memory,
+      isGood,
+      texturePath, // Armazene o caminho aqui se precisar
+      timeout
+    });
+  }, undefined, (error) => {
+    console.error('Erro ao carregar textura:', error);
+  });
+}
+
+  animateMemoryAppear(memory) {
+
+    const scaleUp = { x: 1.5, y: 1.5 };
+    const targetScale = { x: 3.0, y: 3.0 };
+    
+    const animate = () => {
+      scaleUp.x += (targetScale.x - scaleUp.x) * 0.2;
+      scaleUp.y += (targetScale.y - scaleUp.y) * 0.2;
+      memory.scale.set(scaleUp.x, scaleUp.y, 1);
+      
+      if (Math.abs(scaleUp.x - targetScale.x) > 0.01) {
+        requestAnimationFrame(animate);
+      }
+    };
+    animate();
+  }
+
+removeMemory(memoryObj) {
+  // Verificação mais completa
+  if (!memoryObj || !memoryObj.object || !memoryObj.object.parent) {
+    return;
+  }
+  
+  // Limpa o timeout se existir
+  if (memoryObj.timeout) {
+    clearTimeout(memoryObj.timeout);
+  }
+
+  // Animação de fade out
+  const fadeOut = () => {
+    if (!memoryObj.object.parent) return;
+    
+    memoryObj.object.material.opacity -= 0.05;
+    if (memoryObj.object.material.opacity > 0) {
+      requestAnimationFrame(fadeOut);
+    } else {
+      this.scene.remove(memoryObj.object);
+      this.memories = this.memories.filter(m => m !== memoryObj);
     }
+  };
+  
+  fadeOut();
+}
 
-    handleMemoryClick(memory) {
-        clearTimeout(memory.timeout);
+  collectMemory(memory) {
+    clearTimeout(memory.timeout);
+    
+    // Animação de coleta
+    const expandAndFade = () => {
+      memory.object.scale.x += 0.1;
+      memory.object.scale.y += 0.1;
+      memory.object.material.opacity -= 0.05;
+      
+      if (memory.object.material.opacity > 0) {
+        requestAnimationFrame(expandAndFade);
+      } else {
         this.scene.remove(memory.object);
         this.memories = this.memories.filter(m => m !== memory);
-        
-        if (memory.isGood) {
-            this.score++;
-        } else {
-            this.badMemories++;
-        }
-        
-        this.updateScoreDisplay();
-        this.checkGameState();
+      }
+    };
+    expandAndFade();
+    
+    // Atualiza pontuação
+    if (memory.isGood) {
+      this.score++;
+      this.composer.passes[2].strength = 1.5;
+      setTimeout(() => {
+        this.composer.passes[2].strength = 1.35;
+      }, 300);
+    } else {
+      this.badMemories++;
+      this.composer.passes[1].uniforms['damp'].value = 0.7;
+      setTimeout(() => {
+        this.composer.passes[1].uniforms['damp'].value = 0.85;
+      }, 500);
     }
+    
+    this.updateScoreDisplay();
+    this.checkGameState();
+  }
 
-    checkGameState() {
-        if (this.badMemories >= 3) {
-            this.endGame("Você clicou em 3 memórias ruins. Game Over.");
-        } else if (this.score >= 30) {
-            this.endGame("Você coletou 30 memórias boas. Vitória!");
-        }
+  checkGameState() {
+    if (this.badMemories >= 3) {
+      this.endGame("Você clicou em 3 memórias ruins. Game Over.");
+    } else if (this.score >= 30) {
+      this.endGame("Você coletou 30 memórias boas. Vitória!");
     }
+  }
 
-    endGame(message) {
-        this.gameOver = true;
-        clearInterval(this.memorySpawner);
-        clearTimeout(this.gameTimer);
-        
-        // Mostra mensagem de fim de jogo
-        const gameOverDiv = document.createElement('div');
-        gameOverDiv.style.position = 'absolute';
-        gameOverDiv.style.top = '50%';
-        gameOverDiv.style.left = '50%';
-        gameOverDiv.style.transform = 'translate(-50%, -50%)';
-        gameOverDiv.style.color = 'white';
-        gameOverDiv.style.fontSize = '32px';
-        gameOverDiv.style.zIndex = '10';
-        gameOverDiv.style.backgroundColor = 'rgba(0,0,0,0.7)';
-        gameOverDiv.style.padding = '20px';
-        gameOverDiv.style.borderRadius = '10px';
-        gameOverDiv.textContent = message;
-        document.body.appendChild(gameOverDiv);
-        
-        // Botão de reinício
-        const restartBtn = document.createElement('button');
-        restartBtn.textContent = 'Jogar Novamente';
-        restartBtn.style.marginTop = '20px';
-        restartBtn.style.padding = '10px 20px';
-        gameOverDiv.appendChild(restartBtn);
-        
-        restartBtn.addEventListener('click', () => {
-            document.body.removeChild(gameOverDiv);
-            this.resetGame();
-        });
-    }
+  startMemoryGame() {
+    // Limpa memórias existentes
+    this.memories.forEach(memory => {
+      clearTimeout(memory.timeout);
+      this.scene.remove(memory.object);
+    });
+    this.memories = [];
+    
+    // Reseta estado do jogo
+    this.score = 0;
+    this.badMemories = 0;
+    this.gameOver = false;
+    this.updateScoreDisplay();
+    
+    // Inicia spawn de memórias
+    this.memorySpawner = setInterval(() => {
+      if (!this.gameOver) this.spawnMemory();
+    }, this.memoryInterval);
+    
+    // Configura tempo de jogo
+    this.gameTimer = setTimeout(() => {
+      if (!this.gameOver) this.endGame("Tempo esgotado!");
+    }, this.gameDuration);
+  }
 
-    resetGame() {
-        // Limpa memórias existentes
-        this.memories.forEach(memory => {
-            clearTimeout(memory.timeout);
-            this.scene.remove(memory.object);
-        });
-        
-        this.memories = [];
-        this.score = 0;
-        this.badMemories = 0;
-        this.gameOver = false;
-        this.updateScoreDisplay();
-        
-        // Reinicia o jogo
-        this.startGame();
+  endGame(message) {
+    this.gameOver = true;
+    clearInterval(this.memorySpawner);
+    clearTimeout(this.gameTimer);
+    
+    // Remove todas as memórias
+    this.memories.forEach(memory => {
+      clearTimeout(memory.timeout);
+      this.scene.remove(memory.object);
+    });
+    this.memories = [];
+    
+    // Mostra mensagem de fim de jogo
+    if (this.gameOverDisplay) {
+      document.body.removeChild(this.gameOverDisplay);
     }
-
-    startGame() {
-        // Inicia spawn de memórias
-        this.memorySpawner = setInterval(() => {
-            if (!this.gameOver) this.spawnMemory();
-        }, this.memoryInterval);
-        
-        // Configura tempo de jogo
-        this.gameTimer = setTimeout(() => {
-            if (!this.gameOver) this.endGame("Tempo esgotado!");
-        }, this.gameDuration);
-    }
+    
+    this.gameOverDisplay = document.createElement('div');
+    this.gameOverDisplay.style.position = 'absolute';
+    this.gameOverDisplay.style.top = '50%';
+    this.gameOverDisplay.style.left = '50%';
+    this.gameOverDisplay.style.transform = 'translate(-50%, -50%)';
+    this.gameOverDisplay.style.color = 'white';
+    this.gameOverDisplay.style.fontSize = '32px';
+    this.gameOverDisplay.style.zIndex = '10';
+    this.gameOverDisplay.style.backgroundColor = 'rgba(17, 21, 28, 0.9)';
+    this.gameOverDisplay.style.padding = '30px';
+    this.gameOverDisplay.style.borderRadius = '15px';
+    this.gameOverDisplay.style.textAlign = 'center';
+    this.gameOverDisplay.style.boxShadow = '0 0 20px rgba(255,255,255,0.2)';
+    this.gameOverDisplay.innerHTML = `
+      <p style="margin:0 0 20px 0">${message}</p>
+      <p style="font-size:24px;margin:0 0 20px 0">Memórias boas: ${this.score}</p>
+      <button id="restartButton" style="
+        background: #3a506b;
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        font-size: 18px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.3s;
+      ">Jogar Novamente</button>
+    `;
+    document.body.appendChild(this.gameOverDisplay);
+    
+    document.getElementById('restartButton').addEventListener('click', () => {
+      document.body.removeChild(this.gameOverDisplay);
+      this.startMemoryGame();
+    });
+  }
+   
 }
