@@ -105,8 +105,8 @@ spawnMemory() {
     
     // Posição melhorada
     memory.position.set(
-      (Math.random() - 0.5) * 8, // -4 a 4
-      (Math.random() - 0.5) * 8, // -4 a 4
+      (Math.random() - 0.5) * 20, // -4 a 4
+      (Math.random() - 0.5) * 20, // -4 a 4
       -5 // IMPORTANTE: coloca na frente da cena
     );
 

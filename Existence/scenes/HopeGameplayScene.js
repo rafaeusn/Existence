@@ -104,7 +104,7 @@ export default class HopeGameplay {
       roughness: 0.3,
       metalness: 0,
       envMap: this.hdrEquirect,
-      envMapIntensity: 0.5,
+      envMapIntensity: 2.5,
     });
 
     this.uniMaterial = new THREE.MeshPhysicalMaterial({
