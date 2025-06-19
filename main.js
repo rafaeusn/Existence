@@ -41,9 +41,11 @@ document.getElementById('startButton').addEventListener('click', () => {
 });
 
 document.getElementById('aboutButton').addEventListener('click', () => {
-    document.getElementById('aboutContainer').style.display = 'flex';
+    console.log('Abrindo a seção Sobre');
+    document.getElementById('aboutContainer').classList.toggle('visible');
 });
 
 document.getElementById('closeAbout').addEventListener('click', () => {
+    console.log('Fechando a seção Sobre');
     document.getElementById('aboutContainer').style.display = 'none';
 });
