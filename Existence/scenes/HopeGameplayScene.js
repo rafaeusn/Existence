@@ -24,25 +24,19 @@ export default class HopeGameplay {
     this.eyesMixer = null;
     this.theta = 0;
     this.scale = 0.03;
+    ;
+
+    // Som
+    this.backgroundMusic = new Audio('./assets/backgroundmusic.mp3');
 
     // Pós-processamento
     this.composer = null;
 
-    // Sistema de memórias
-    this.score = 0;
-    this.badMemories = 0;
-    this.gameDuration = 60 * 1000; // 1 minuto
-    this.memoryInterval = 800; // tempo entre memórias
-    this.memoryLifetime = 1500; // tempo de vida da memória
-    this.gameOver = false;
-    this.memories = [];
-    this.memorySpawner = null;
-    this.gameTimer = null;
-    this.pointer = new THREE.Vector2();
 
     // Elementos UI
     this.scoreDisplay = null;
     this.gameOverDisplay = null;
+
   }
 
   async init() {
@@ -50,6 +44,8 @@ export default class HopeGameplay {
     this.renderer.setClearColor(0x11151c, 0); // Fundo transparente para o menu
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+
+
 
     // Posição da câmera
     this.camera.position.set(0, 40, 20);
@@ -75,6 +71,8 @@ export default class HopeGameplay {
 
     this.memorySystem.createScoreDisplay();
 
+    this.glow = this.memorySystem.glow; // Pega o valor de glow do MemorySystem
+
     
     // Event listeners
     window.addEventListener('resize', this.onWindowResize.bind(this));
@@ -84,15 +82,33 @@ export default class HopeGameplay {
     // Inicia animação
     this.animate();
     this.memorySystem.startMemoryGame();
+    this.backgroundMusic.loop = true;
+    this.backgroundMusic.play();
+
   }
 
-  async loadEnvironment() {
+
+
+    // TRY OTHER HDRs
+  //.load( 'https://miroleon.github.io/daily-assets/GRADIENT_01_01_comp.hdr', function () { - branco fortao
+  //.load( 'https://miroleon.github.io/daily-assets/gradient_13.hdr', function () { - escuro e laranja (mas acho que depende da cor)
+  //.load( 'https://miroleon.github.io/daily-assets/gradient_4_comp.hdr', function () {
+  //.load( 'https://miroleon.github.io/daily-assets/gradient_5_comp.hdr', function () {
+
+  async loadEnvironment(num) {
+    let hdrList = [
+      'https://miroleon.github.io/daily-assets/gradient.hdr',
+      'https://miroleon.github.io/daily-assets/GRADIENT_01_01_comp.hdr',
+      'https://miroleon.github.io/daily-assets/gradient_13.hdr',
+      'https://miroleon.github.io/daily-assets/gradient_4_comp.hdr',
+      'https://miroleon.github.io/daily-assets/gradient_5_comp.hdr'
+    ];
     return new Promise((resolve) => {
       const loader = new RGBELoader();
-      loader.load('https://miroleon.github.io/daily-assets/gradient.hdr', (hdrEquirect) => {
+      loader.load(hdrList[2], (hdrEquirect) => {
         hdrEquirect.mapping = THREE.EquirectangularReflectionMapping;
         this.scene.environment = hdrEquirect;
-        this.hdrEquirect = hdrEquirect;
+        this.hdrEquirect = hdrEquirect; 
         resolve();
       });
     });
@@ -104,12 +120,12 @@ export default class HopeGameplay {
       roughness: 0.3,
       metalness: 0,
       envMap: this.hdrEquirect,
-      envMapIntensity: 2.5,
+      envMapIntensity: this.glow,
     });
 
     this.uniMaterial = new THREE.MeshPhysicalMaterial({
       envMap: this.hdrEquirect,
-      envMapIntensity: 0,
+      envMapIntensity: 200.5,
       emissive: 0x11151c,
     });
   }
