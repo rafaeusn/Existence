@@ -15,13 +15,13 @@ export function createComposer(renderer, scene, camera) {
 
     // Afterimage (efeito de arrasto de movimento)
     const afterimagePass = new AfterimagePass();
-    afterimagePass.uniforms['damp'].value = 0.9;
+    afterimagePass.uniforms['damp'].value = 0.85;
     composer.addPass(afterimagePass);
 
     // Bloom (brilho exagerado)
     const bloomPass = new UnrealBloomPass(
         new THREE.Vector2(window.innerWidth, window.innerHeight),
-        1.75,  // strength
+        1.35,  // strength
         0.1,   // threshold
         1      // radius
     );
