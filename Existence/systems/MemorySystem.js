@@ -6,6 +6,7 @@ export default class MemorySystem {
         this.camera = camera;
         this.renderer = renderer;
         this.composer = composer;
+
         this.score = 0;
         this.badMemories = 0;
         this.memoryInterval = 800;
@@ -17,6 +18,7 @@ export default class MemorySystem {
 
         this.createScoreDisplay();
         this.createProgressBar();
+
         this.progressValue = 50;
         this.updateProgressBar();
     }
@@ -199,36 +201,35 @@ export default class MemorySystem {
     }
 
     startMemoryGame() {
-        // Limpa intervalos antigos se existirem
+        // LIMPA INTERVALOS ANTERIORES
         if (this.memorySpawner) clearInterval(this.memorySpawner);
         if (this.progressDrainInterval) clearInterval(this.progressDrainInterval);
 
-        // Remove memórias da cena e limpa timeouts
+        // LIMPA MEMÓRIAS ANTIGAS DA CENA
         this.memories.forEach(memory => {
             clearTimeout(memory.timeout);
             this.scene.remove(memory.object);
         });
         this.memories = [];
 
-        // Reseta variáveis de jogo
+        // RESET ESTADOS
         this.score = 0;
         this.badMemories = 0;
-        this.gameOver = false;
-        this.updateScoreDisplay();
-
         this.progressValue = 50;
+        this.gameOver = false;
+
+        this.updateScoreDisplay();
         this.updateProgressBar();
 
-        // Remove tela de game over, se existir
+        // REMOVE GAME OVER DA TELA SE EXISTIR
         if (this.gameOverDisplay) {
             document.body.removeChild(this.gameOverDisplay);
             this.gameOverDisplay = null;
         }
 
-        // Spawna uma memória imediatamente
+        // COMEÇA A SPAWNAR MEMÓRIAS NOVAMENTE
         this.spawnMemory();
 
-        // Configura intervalos para spawnar memórias e drenar barra
         this.memorySpawner = setInterval(() => {
             if (!this.gameOver) this.spawnMemory();
         }, this.memoryInterval);
@@ -247,20 +248,20 @@ export default class MemorySystem {
         clearInterval(this.memorySpawner);
         clearInterval(this.progressDrainInterval);
 
-        // Remove todas as memórias da cena e limpa timeouts
+        // LIMPA MEMÓRIAS RESTANTES
         this.memories.forEach(memory => {
             clearTimeout(memory.timeout);
             this.scene.remove(memory.object);
         });
         this.memories = [];
 
-        // Remove tela de game over anterior, se houver
+        // REMOVE GAME OVER ANTIGO SE TIVER
         if (this.gameOverDisplay) {
             document.body.removeChild(this.gameOverDisplay);
             this.gameOverDisplay = null;
         }
 
-        // Cria tela de game over
+        // CRIA NOVO GAME OVER
         this.gameOverDisplay = document.createElement('div');
         this.gameOverDisplay.id = 'game-over';
         this.gameOverDisplay.classList.add('game-over');
@@ -271,20 +272,21 @@ export default class MemorySystem {
         `;
         document.body.appendChild(this.gameOverDisplay);
 
-        // Anima tela aparecendo
+        // ANIMAÇÃO APARECER
         setTimeout(() => {
             this.gameOverDisplay.classList.add('visible');
         }, 10);
 
-        // Evento para reiniciar jogo
-        document.getElementById('restartButton').addEventListener('click', () => {
+        // BOTÃO REINICIAR
+        const restartButton = document.getElementById('restartButton');
+        restartButton.addEventListener('click', () => {
             this.gameOverDisplay.classList.remove('visible');
 
             setTimeout(() => {
                 if (document.body.contains(this.gameOverDisplay)) {
                     document.body.removeChild(this.gameOverDisplay);
                 }
-                this.startMemoryGame();
+                this.startMemoryGame();  // <-- Aqui garante que recomece tudo de novo
             }, 400);
         });
     }

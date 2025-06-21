@@ -53,7 +53,6 @@ let currentScene = null;
 async function initScene(sceneName) {
     if (currentScene) {
         console.log(`Mudando para a cena: ${sceneName}`);
-        // Aqui poderia limpar ou pausar a cena anterior, se necessário
     }
     
     currentScene = scenes[sceneName];
