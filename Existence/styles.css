@@ -17,7 +17,7 @@
 html, body {
   margin: 0;
   overflow: hidden;
-  background-color: #11151c;
+  background-color: #000000;
   font-family: 'Open Sans', sans-serif;
   color: white;
 }
@@ -85,7 +85,7 @@ html, body {
   font-family: 'Fonte2', monospace;
   color: #fff;
   background-color: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.26);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -93,7 +93,7 @@ html, body {
 }
 
 .menu button:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.027);
   border-color: rgba(255, 255, 255, 0.6);
 }
 .memory {
@@ -107,7 +107,7 @@ html, body {
   top: 50%;
   left: 20%;
   transform: translate(-50%, -50%) scale(0.95);
-  background: rgba(17, 21, 28, 0.95);
+  background: rgba(15, 15, 15, 0.089);
   border: 1px solid rgba(255, 255, 255, 0.15);
   padding: 20px 30px;
   z-index: 3;
@@ -119,7 +119,7 @@ html, body {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.4s ease, transform 0.4s ease;
-  display: block; /* Mantemos block, controlamos visibilidade via classe */
+  
 }
 
 .about-container.visible {
@@ -150,3 +150,121 @@ html, body {
   background-color: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.5);
 }
+.text-container {
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+.text-container.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+.menu {
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+.menu.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+/* Score Display */
+#game-ui {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  color: white;
+  font-family: 'Fonte1', sans-serif;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  z-index: 10;
+}
+
+/* Progress Container */
+.progress-container {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  width: 20px;
+  height: 300px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 50%;
+  background: linear-gradient(to top, white, black);
+  transition: height 0.2s ease;
+}
+
+.progress-line {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.progress-icon {
+  position: absolute;
+  right: 60px;
+  width: 32px;
+  height: 32px;
+  z-index: 11;
+}
+
+.game-over {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  background: rgba(15, 15, 15, 0.089); /* Fundo leve transparente */
+  border: 1px solid rgba(255, 255, 255, 0.15); /* Borda sutil */
+  padding: 20px 30px;
+  z-index: 10;
+  color: white;
+  font-size: 0.95rem;
+  font-family: 'Fonte2', monospace;
+  width: 100%;
+  max-width: 500px;
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  text-align: center;
+}
+
+.game-over.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.game-over p {
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.game-over button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  font-family: 'Fonte2', monospace;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 5px;
+}
+
+.game-over button:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+

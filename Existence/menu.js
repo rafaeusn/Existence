@@ -2,12 +2,12 @@ const aboutContainer = document.getElementById("aboutContainer");
 const startButton = document.getElementById("startButton");
 const aboutButton = document.getElementById("aboutButton");
 const closeAbout = document.getElementById("closeAbout");
-const preloader = document.getElementById("preloader"); // div do preloader no HTML
+const preloader = document.getElementById("preloader");
 
-// No início, garante que preloader esteja escondido
+// Garante que o preloader comece escondido
 preloader.style.display = "none";
 
-// Função segura para trocar scripts modulares com callback onload
+// Função para carregar scripts modulares com callback
 function loadScriptSafely(newSrc, onLoadCallback) {
   const oldScript = document.getElementById("dynamicScript");
   if (oldScript) oldScript.remove();
@@ -24,28 +24,30 @@ function loadScriptSafely(newSrc, onLoadCallback) {
   document.body.appendChild(script);
 }
 
+// Evento do botão "Sobre" — alterna a visibilidade via classe CSS
+aboutButton.addEventListener("click", () => {
+  aboutContainer.classList.toggle("visible");
+});
+
+// Evento do botão fechar — remove a classe para esconder o aboutContainer
+closeAbout.addEventListener("click", () => {
+  aboutContainer.classList.remove("visible");
+});
+
+// Evento do botão "Iniciar"
 startButton.addEventListener("click", () => {
-  // Esconde o menu e o título imediatamente
+  // Esconde o aboutContainer, menu e texto
   aboutContainer.classList.remove("visible");
   document.querySelector(".menu").style.display = "none";
   document.querySelector(".text-container").style.display = "none";
 
-  // Mostra o preloader
+  // Exibe o preloader
   preloader.style.display = "flex";
 
-  // Carrega o script hopedepressed.js e esconde preloader quando terminar
+  // Carrega script do gameplay e esconde o preloader depois
   loadScriptSafely("hopegameplay.js", () => {
-    // Pequeno delay para suavizar a transição (opcional)
     setTimeout(() => {
       preloader.style.display = "none";
     }, 2000);
   });
-});
-
-aboutButton.addEventListener("click", () => {
-  aboutContainer.classList.add("visible");
-});
-
-closeAbout.addEventListener("click", () => {
-  aboutContainer.classList.remove("visible");
 });
