@@ -222,10 +222,11 @@ export default class MemorySystem {
         this.updateProgressBar();
 
         // REMOVE GAME OVER DA TELA SE EXISTIR
-        if (this.gameOverDisplay) {
+        if (this.gameOverDisplay && document.body.contains(this.gameOverDisplay)) {
             document.body.removeChild(this.gameOverDisplay);
             this.gameOverDisplay = null;
         }
+
 
         // COMEÇA A SPAWNAR MEMÓRIAS NOVAMENTE
         this.spawnMemory();
@@ -256,10 +257,11 @@ export default class MemorySystem {
         this.memories = [];
 
         // REMOVE GAME OVER ANTIGO SE TIVER
-        if (this.gameOverDisplay) {
+        if (this.gameOverDisplay && document.body.contains(this.gameOverDisplay)) {
             document.body.removeChild(this.gameOverDisplay);
             this.gameOverDisplay = null;
         }
+
 
         // CRIA NOVO GAME OVER
         this.gameOverDisplay = document.createElement('div');
