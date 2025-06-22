@@ -10,7 +10,7 @@ import { PixelShader } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/
 
 export default class HandsScene {
     constructor(renderer) {
-        this.renderer = renderer; // Usa o renderer compartilhado
+        this.renderer = renderer; 
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.clock = new THREE.Clock();
@@ -21,11 +21,11 @@ export default class HandsScene {
     }
 
     async init() {
-        // --- VISUAL ATUALIZADO: Fundo e Névoa ---
+
         this.renderer.setClearColor(0x000000, 1);
-        this.scene.fog = new THREE.FogExp2(0x11151c, 0.45); // Densidade da névoa atualizada
+        this.scene.fog = new THREE.FogExp2(0x11151c, 0.45); // Densidade da névoa 
         
-        // --- VISUAL ATUALIZADO: HDR ---
+
         const hdrEquirect = await new RGBELoader().loadAsync('https://miroleon.github.io/daily-assets/GRADIENT_01_01_comp.hdr');
         hdrEquirect.mapping = THREE.EquirectangularReflectionMapping;
         this.scene.environment = hdrEquirect;
@@ -33,7 +33,6 @@ export default class HandsScene {
         // Carrega o modelo com o material e textura corretos
         await this.loadHandsModel();
 
-        // --- VISUAL ATUALIZADO: Pós-processamento ---
         const renderPass = new RenderPass(this.scene, this.camera);
         
         const afterimagePass = new AfterimagePass();
@@ -53,7 +52,7 @@ export default class HandsScene {
         this.composer.addPass(renderPass);
         this.composer.addPass(afterimagePass);
         this.composer.addPass(bloomPass);
-        // this.composer.addPass(pixelPass); // O efeito Pixelado é forte, descomente se quiser usá-lo
+        // this.composer.addPass(pixelPass); // efeito Pixelado 
 
         window.addEventListener('resize', this.resizeListener);
     }
@@ -84,7 +83,6 @@ export default class HandsScene {
 
         hands.traverse(child => {
             if (child.isMesh) {
-                // --- VISUAL ATUALIZADO: Propriedades do material ---
                 child.material = new THREE.MeshPhysicalMaterial({
                     color: 0x606060,
                     roughness: 1.5,
@@ -116,7 +114,6 @@ export default class HandsScene {
     }
 
     update() {
-        // --- VISUAL ATUALIZADO: Movimento da Câmera ---
         this.theta += 0.005;
         this.camera.position.x = Math.sin(this.theta) * 2.3;
         this.camera.position.z = Math.cos(this.theta) * 2.3;

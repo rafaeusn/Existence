@@ -1,5 +1,4 @@
 /**
- * Cria e exibe uma tela de fim de jogo (vitória ou derrota).
  * @param {string} message - A mensagem principal a ser exibida (ex: "Vitória!").
  * @param {number} score - A pontuação final do jogador.
  * @param {function} onRestartCallback - A função a ser executada quando o botão "Jogar Novamente" for clicado.
@@ -13,8 +12,8 @@ export function createEndGameScreen(message, score, onRestartCallback) {
 
     // Cria o contêiner da tela final.
     const endScreen = document.createElement('div');
-    endScreen.id = 'game-over-screen'; // ID único para a tela
-    endScreen.classList.add('game-over'); // Reutiliza o seu estilo CSS.
+    endScreen.id = 'game-over-screen';
+    endScreen.classList.add('game-over');
 
     endScreen.innerHTML = `
         <p>${message}</p>

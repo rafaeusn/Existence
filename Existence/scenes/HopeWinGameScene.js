@@ -42,7 +42,6 @@ export default class HopeWinGameScene {
         this.camera.fov = 170;
         this.camera.updateProjectionMatrix();
 
-        // --- ESTILO VISUAL RESTAURADO DO SEU CÓDIGO ANTIGO ---
         this.renderer.setClearColor(0x000000);
         this.camera.position.z = 70;
         this.camera.position.y = 80;
@@ -61,7 +60,7 @@ export default class HopeWinGameScene {
         this.body_01_mixer = new THREE.AnimationMixer(body_01);
         this.body_01_action = this.body_01_mixer.clipAction(body_01.animations[0]);
         this.body_01_action.play();
-        this.body_01_action.paused = true; // --- CORREÇÃO: Animação inicia pausada ---
+        this.body_01_action.paused = true;
 
         body_01.traverse(child => { if (child.isMesh) child.material = this.blob_mat; });
         body_01.position.set(0, -5, 0);
@@ -72,7 +71,7 @@ export default class HopeWinGameScene {
         this.eyes_01_mixer = new THREE.AnimationMixer(eyes_01);
         this.eyes_01_action = this.eyes_01_mixer.clipAction(eyes_01.animations[0]);
         this.eyes_01_action.play();
-        this.eyes_01_action.paused = true; // --- CORREÇÃO: Animação inicia pausada ---
+        this.eyes_01_action.paused = true; 
 
         eyes_01.traverse(child => { if (child.isMesh) child.material = this.uni_mat; });
         eyes_01.position.set(0, -5, 0);
@@ -85,7 +84,6 @@ export default class HopeWinGameScene {
         const afterimagePass = new AfterimagePass();
         afterimagePass.uniforms['damp'].value = 0.85;
 
-        // Parâmetros do Bloom corrigidos para corresponder ao seu código antigo
         const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.35, 1, 0.1);
 
         this.composer = new EffectComposer(this.renderer);
@@ -113,7 +111,6 @@ export default class HopeWinGameScene {
         const delta = this.clock.getDelta();
         this.fovElapsed += delta;
 
-        // --- CORREÇÃO: Os mixers agora são atualizados ---
         if(this.body_01_mixer) this.body_01_mixer.update(delta);
         if(this.eyes_01_mixer) this.eyes_01_mixer.update(delta);
 
@@ -165,7 +162,6 @@ export default class HopeWinGameScene {
             this.theta1 += 0.005;
         }
 
-        // --- MOVIMENTO DE CÂMARA RESTAURADO ---
         this.camera.position.x = -Math.sin(this.theta1 + 1) * 45;
         this.camera.position.z = -Math.cos(this.theta1 + 1) * 25;
         this.camera.position.y = 20 * Math.cos(this.theta1 + 1) + 10;

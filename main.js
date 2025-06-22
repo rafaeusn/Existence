@@ -73,9 +73,6 @@ window.addEventListener('DOMContentLoaded', () => {
         textContainer?.classList.add('fade-out');
         menu?.classList.add('fade-out');
         
-        // A música já terá começado com o primeiro clique
-        // O código de play() foi removido daqui
-
         setTimeout(() => {
             if(textContainer) textContainer.style.display = 'none';
             if(menu) menu.style.display = 'none';
@@ -84,14 +81,13 @@ window.addEventListener('DOMContentLoaded', () => {
         initScene('hopeGameplay');
     });
 
-    // --- NOVO: Toca a música na primeira interação do utilizador com a página ---
     window.addEventListener('click', () => {
         if (backgroundMusic.paused) {
             backgroundMusic.play().catch(error => {
                 console.warn("A música não pôde ser reproduzida automaticamente:", error);
             });
         }
-    }, { once: true }); // A opção 'once' garante que isto só acontece uma vez.
+    }, { once: true });
 
     window.addEventListener('changeScene', (event) => {
         const { sceneName, ...sceneData } = event.detail;

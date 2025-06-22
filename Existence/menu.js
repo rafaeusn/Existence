@@ -24,27 +24,21 @@ function loadScriptSafely(newSrc, onLoadCallback) {
   document.body.appendChild(script);
 }
 
-// Evento do botão "Sobre" — alterna a visibilidade via classe CSS
 aboutButton.addEventListener("click", () => {
   aboutContainer.classList.toggle("visible");
 });
 
-// Evento do botão fechar — remove a classe para esconder o aboutContainer
 closeAbout.addEventListener("click", () => {
   aboutContainer.classList.remove("visible");
 });
 
-// Evento do botão "Iniciar"
 startButton.addEventListener("click", () => {
-  // Esconde o aboutContainer, menu e texto
   aboutContainer.classList.remove("visible");
   document.querySelector(".menu").style.display = "none";
   document.querySelector(".text-container").style.display = "none";
 
-  // Exibe o preloader
   preloader.style.display = "flex";
 
-  // Carrega script do gameplay e esconde o preloader depois
   loadScriptSafely("hopegameplay.js", () => {
     setTimeout(() => {
       preloader.style.display = "none";

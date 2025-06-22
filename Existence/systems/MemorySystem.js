@@ -1,5 +1,4 @@
 import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
-
 export default class MemorySystem {
     constructor(scene, camera, renderer, composer) {
         this.scene = scene;
@@ -60,8 +59,16 @@ export default class MemorySystem {
         if (this.gameOver) return;
         this.progressValue = Math.max(0, Math.min(100, this.progressValue));
         this.progressBar.style.height = `${this.progressValue}%`;
-        if (this.progressValue >= 100) this.endGame("Você preencheu a barra de boas memórias. Vitória!", true);
-        if (this.progressValue <= 0) this.endGame("Sua alma se esvaiu.", false);
+        
+        if (this.progressValue >= 100) {
+            const winMessage = "A luz retorna, não como uma explosão, mas como o nascer de um sol sereno. Você juntou os fragmentos, não para reconstruir o passado, mas para iluminar o presente.<br><br>Você entendeu. Não viemos ao mundo destinados a um único propósito. Não precisamos nos pressionar com o fardo da existência a cada momento. A vida não é uma resposta a ser encontrada, mas um caminho a ser criado.<br><br>Ao abraçar os altos e baixos, você encontrou o seu próprio equilíbrio. A sua própria paz. Você é o seu próprio destino.";
+            this.endGame(winMessage, true);
+        }
+
+        if (this.progressValue <= 0) {
+            const gameOverMessage = "O eco silenciou. As memórias, antes estrelas cintilantes, tornaram-se apenas poeira fria no vazio. A chama, que um dia ardeu com a promessa de um amanhã, foi sufocada pelo peso do agora.<br><br>Você se esvaiu na solidão, imergindo numa escuridão que já não tem fim nem começo. Não há mais luta, apenas o silêncio profundo de uma pergunta que nunca encontrará resposta.<br><br>Você perdeu a esperança...";
+            this.endGame(gameOverMessage, false);
+        }
     }
 
     spawnMemory() {
@@ -94,7 +101,6 @@ export default class MemorySystem {
     collectMemory(memory) {
         clearTimeout(memory.timeout);
         
-        // --- EFEITO ISOLADO: Animações locais em vez de globais ---
         if (memory.isGood) {
             new Audio('./assets/goodsound.mp3').play();
             this.score++;
@@ -147,7 +153,6 @@ export default class MemorySystem {
         }, 100);
     }
 
-    // Outras funções
     startMemoryGame() { if (this.memorySpawner) clearInterval(this.memorySpawner); if (this.progressDrainInterval) clearInterval(this.progressDrainInterval); this.memories.forEach(memory => { clearTimeout(memory.timeout); if (memory.object.parent) this.scene.remove(memory.object); }); this.memories = []; this.score = 0; this.badMemories = 0; this.progressValue = 50; this.gameOver = false; this.createScoreDisplay(); this.createProgressBar(); this.updateScoreDisplay(); this.updateProgressBar(); this.spawnMemory(); this.memorySpawner = setInterval(() => { if (!this.gameOver) this.spawnMemory(); }, this.memoryInterval); this.progressDrainInterval = setInterval(() => { if (!this.gameOver) { this.progressValue -= 0.6; this.updateProgressBar(); } }, 200); }
     endGame(message, isWin) { if (this.gameOver) return; this.gameOver = true; clearInterval(this.memorySpawner); clearInterval(this.progressDrainInterval); this.scoreDisplay?.remove(); this.progressContainer?.remove(); document.querySelectorAll('.progress-icon').forEach(icon => icon.remove()); this.memories.forEach(memory => { clearTimeout(memory.timeout); if (memory.object.parent) this.scene.remove(memory.object); }); this.memories = []; const targetScene = isWin ? 'hopeWinGame' : 'hopeDepressed'; const event = new CustomEvent('changeScene', { detail: { sceneName: targetScene, message: message, score: this.score } }); window.dispatchEvent(event); }
     onPointerClick(event) { this.pointer.x = (event.clientX / window.innerWidth) * 2 - 1; this.pointer.y = -(event.clientY / window.innerHeight) * 2 + 1; this.checkMemoryIntersection(); }
