@@ -1,5 +1,4 @@
 import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
-// MemorySystem não precisa mais de importar o button-manager.
 
 export default class MemorySystem {
     constructor(scene, camera, renderer, composer) {
@@ -14,7 +13,6 @@ export default class MemorySystem {
         this.gameOver = false;
         this.memories = [];
         this.pointer = new THREE.Vector2();
-        this.glow = 5.5;
     }
 
     createScoreDisplay() {
@@ -63,85 +61,97 @@ export default class MemorySystem {
         this.progressValue = Math.max(0, Math.min(100, this.progressValue));
         this.progressBar.style.height = `${this.progressValue}%`;
         if (this.progressValue >= 100) this.endGame("Você preencheu a barra de boas memórias. Vitória!", true);
-        if (this.progressValue >= 75) { new Audio('./assets/choirsound.wav').play(); this.glow = 10.5; }
         if (this.progressValue <= 0) this.endGame("Sua alma se esvaiu.", false);
+    }
+
+    spawnMemory() {
+        if (this.gameOver) return;
+        const isGood = Math.random() > 0.3;
+        const texturePath = isGood ? './assets/memorygood.png' : './assets/memorybad.png';
+        const textureLoader = new THREE.TextureLoader();
+        textureLoader.load(texturePath, (texture) => {
+            const material = new THREE.SpriteMaterial({
+                map: texture,
+                transparent: true,
+                opacity: 0.9,
+                depthTest: false,
+                color: 0xcccccc, 
+                blending: THREE.AdditiveBlending 
+            });
+            const memory = new THREE.Sprite(material);
+            memory.scale.set(50, 50, 1);
+            const z = -5;
+            const viewport = this.getViewportSizeAtZ(z);
+            const marginFactor = 0.9;
+            memory.position.set((Math.random() - 0.5) * viewport.width * marginFactor, (Math.random() - 0.5) * viewport.height * marginFactor, z);
+            this.scene.add(memory);
+            this.animateMemoryAppear(memory);
+            const timeout = setTimeout(() => this.removeMemory({ object: memory }), this.memoryLifetime);
+            this.memories.push({ object: memory, isGood, timeout });
+        });
     }
 
     collectMemory(memory) {
         clearTimeout(memory.timeout);
-        const expandAndFade = () => {
-            if (!memory.object?.parent) return;
-            memory.object.scale.x += 0.1;
-            memory.object.scale.y += 0.1;
-            memory.object.material.opacity -= 0.05;
-            if (memory.object.material.opacity > 0) { requestAnimationFrame(expandAndFade); } 
-            else { this.scene.remove(memory.object); this.memories = this.memories.filter(m => m !== memory); }
-        };
-        expandAndFade();
+        
+        // --- EFEITO ISOLADO: Animações locais em vez de globais ---
         if (memory.isGood) {
             new Audio('./assets/goodsound.mp3').play();
             this.score++;
             this.progressValue += 10;
-            if(this.composer.passes[2]) this.composer.passes[2].strength = 1.5;
-            setTimeout(() => { if(this.composer.passes[2]) this.composer.passes[2].strength = 1.35; }, 300);
+            this.animateGoodMemoryCollection(memory.object);
         } else {
             new Audio('./assets/badsound.mp3').play();
             this.badMemories++;
             this.progressValue -= 5;
-            if(this.composer.passes[1]) this.composer.passes[1].uniforms['damp'].value = 0.7;
-            setTimeout(() => { if(this.composer.passes[1]) this.composer.passes[1].uniforms['damp'].value = 0.85; }, 500);
+            this.animateBadMemoryCollection(memory.object);
         }
-        this.updateScoreDisplay();
-        this.updateProgressBar();
-    }
-
-    startMemoryGame() {
-        if (this.memorySpawner) clearInterval(this.memorySpawner);
-        if (this.progressDrainInterval) clearInterval(this.progressDrainInterval);
-        this.memories.forEach(memory => { clearTimeout(memory.timeout); if (memory.object.parent) this.scene.remove(memory.object); });
-        this.memories = [];
-        this.score = 0;
-        this.badMemories = 0;
-        this.progressValue = 50;
-        this.gameOver = false;
-        this.createScoreDisplay();
-        this.createProgressBar();
-        this.updateScoreDisplay();
-        this.updateProgressBar();
-        this.spawnMemory();
-        this.memorySpawner = setInterval(() => { if (!this.gameOver) this.spawnMemory(); }, this.memoryInterval);
-        this.progressDrainInterval = setInterval(() => { if (!this.gameOver) { this.progressValue -= 0.6; this.updateProgressBar(); } }, 200);
-    }
-    
-    endGame(message, isWin) {
-        if (this.gameOver) return;
-        this.gameOver = true;
-        clearInterval(this.memorySpawner);
-        clearInterval(this.progressDrainInterval);
-        this.scoreDisplay?.remove();
-        this.progressContainer?.remove();
-        document.querySelectorAll('.progress-icon').forEach(icon => icon.remove());
-        this.memories.forEach(memory => { clearTimeout(memory.timeout); if (memory.object.parent) this.scene.remove(memory.object); });
-        this.memories = [];
-
-        // Determina qual cena carregar com base na vitória ou derrota
-        const targetScene = isWin ? 'hopeWinGame' : 'hopeDepressed';
         
-        // Dispara um único evento com todos os dados necessários
-        const event = new CustomEvent('changeScene', { 
-            detail: { 
-                sceneName: targetScene,
-                message: message,
-                score: this.score 
-            } 
-        });
-        window.dispatchEvent(event);
+        this.memories = this.memories.filter(m => m !== memory);
+        this.updateScoreDisplay();
+        this.updateProgressBar();
     }
 
-    // Funções de utilidade
+    animateGoodMemoryCollection(memoryObject) {
+        const initialOpacity = memoryObject.material.opacity;
+        const flashDuration = 250; 
+        const startTime = Date.now();
+        const animate = () => {
+            const elapsedTime = Date.now() - startTime;
+            if (elapsedTime > flashDuration || !memoryObject.parent) {
+                if (memoryObject.parent) this.scene.remove(memoryObject);
+                return;
+            }
+            const progress = elapsedTime / flashDuration;
+            memoryObject.material.opacity = initialOpacity * (1 - progress); 
+            memoryObject.scale.x += 0.2; 
+            memoryObject.scale.y += 0.2;
+            requestAnimationFrame(animate);
+        };
+        animate();
+    }
+
+    animateBadMemoryCollection(memoryObject) {
+        let flashes = 0;
+        const flashInterval = setInterval(() => {
+            if (!memoryObject.parent) {
+                clearInterval(flashInterval);
+                return;
+            }
+            memoryObject.material.color.set(flashes % 2 === 0 ? 0xff0000 : 0xcccccc);
+            flashes++;
+            if (flashes >= 4) {
+                clearInterval(flashInterval);
+                if (memoryObject.parent) this.removeMemory({ object: memoryObject });
+            }
+        }, 100);
+    }
+
+    // Outras funções
+    startMemoryGame() { if (this.memorySpawner) clearInterval(this.memorySpawner); if (this.progressDrainInterval) clearInterval(this.progressDrainInterval); this.memories.forEach(memory => { clearTimeout(memory.timeout); if (memory.object.parent) this.scene.remove(memory.object); }); this.memories = []; this.score = 0; this.badMemories = 0; this.progressValue = 50; this.gameOver = false; this.createScoreDisplay(); this.createProgressBar(); this.updateScoreDisplay(); this.updateProgressBar(); this.spawnMemory(); this.memorySpawner = setInterval(() => { if (!this.gameOver) this.spawnMemory(); }, this.memoryInterval); this.progressDrainInterval = setInterval(() => { if (!this.gameOver) { this.progressValue -= 0.6; this.updateProgressBar(); } }, 200); }
+    endGame(message, isWin) { if (this.gameOver) return; this.gameOver = true; clearInterval(this.memorySpawner); clearInterval(this.progressDrainInterval); this.scoreDisplay?.remove(); this.progressContainer?.remove(); document.querySelectorAll('.progress-icon').forEach(icon => icon.remove()); this.memories.forEach(memory => { clearTimeout(memory.timeout); if (memory.object.parent) this.scene.remove(memory.object); }); this.memories = []; const targetScene = isWin ? 'hopeWinGame' : 'hopeDepressed'; const event = new CustomEvent('changeScene', { detail: { sceneName: targetScene, message: message, score: this.score } }); window.dispatchEvent(event); }
     onPointerClick(event) { this.pointer.x = (event.clientX / window.innerWidth) * 2 - 1; this.pointer.y = -(event.clientY / window.innerHeight) * 2 + 1; this.checkMemoryIntersection(); }
     checkMemoryIntersection() { if (this.gameOver) return; const raycaster = new THREE.Raycaster(); raycaster.setFromCamera(this.pointer, this.camera); const intersects = raycaster.intersectObjects(this.memories.map(m => m.object)); if (intersects.length > 0) { const memory = this.memories.find(m => m.object === intersects[0].object); if (memory) this.collectMemory(memory); } }
-    spawnMemory() { if (this.gameOver) return; const isGood = Math.random() > 0.3; const texturePath = isGood ? './assets/memorygood.png' : './assets/memorybad.png'; const textureLoader = new THREE.TextureLoader(); textureLoader.load(texturePath, (texture) => { const material = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0.9, depthTest: false }); const memory = new THREE.Sprite(material); memory.scale.set(50, 50, 1); const z = -5; const viewport = this.getViewportSizeAtZ(z); const marginFactor = 0.9; memory.position.set((Math.random() - 0.5) * viewport.width * marginFactor, (Math.random() - 0.5) * viewport.height * marginFactor, z); this.scene.add(memory); this.animateMemoryAppear(memory); const timeout = setTimeout(() => this.removeMemory({ object: memory }), this.memoryLifetime); this.memories.push({ object: memory, isGood, timeout }); }); }
     animateMemoryAppear(memory) { const scaleUp = { x: 1.5, y: 1.5 }; const targetScale = { x: 3.0, y: 3.0 }; const animate = () => { if (!memory.parent) return; scaleUp.x += (targetScale.x - scaleUp.x) * 0.2; scaleUp.y += (targetScale.y - scaleUp.y) * 0.2; memory.scale.set(scaleUp.x, scaleUp.y, 1); if (Math.abs(scaleUp.x - targetScale.x) > 0.01) requestAnimationFrame(animate); }; animate(); }
     removeMemory(memoryObj) { if (!memoryObj || !memoryObj.object?.parent) return; if (memoryObj.timeout) clearTimeout(memoryObj.timeout); const fadeOut = () => { if (!memoryObj.object?.parent) return; memoryObj.object.material.opacity -= 0.05; if (memoryObj.object.material.opacity > 0) { requestAnimationFrame(fadeOut); } else { this.scene.remove(memoryObj.object); this.memories = this.memories.filter(m => m !== memoryObj); } }; fadeOut(); }
     getViewportSizeAtZ(z) { const fov = this.camera.fov * (Math.PI / 180); const height = 2 * Math.tan(fov / 2) * Math.abs(z - this.camera.position.z); const width = height * this.camera.aspect; return { width, height }; }

@@ -9,15 +9,15 @@ import MemorySystem from '../systems/MemorySystem.js';
 
 export default class HopeGameplayScene {
     constructor(renderer) {
-        this.renderer = renderer; // Usa o renderer compartilhado
+        this.renderer = renderer;
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
+        // --- ESTILO RESTAURADO: Câmera com FOV de 45 ---
+        this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.clock = new THREE.Clock();
         
-        this.theta = 0;
+        this.theta = 0; // Renomeado de theta1 para consistência
         this.composer = null;
         this.memorySystem = null;
-        this.backgroundMusic = new Audio('./assets/backgroundmusic.mp3');
         
         this.resizeListener = this.onWindowResize.bind(this);
         this.clickListener = (event) => {
@@ -26,19 +26,26 @@ export default class HopeGameplayScene {
     }
 
     async init() {
-        this.renderer.setClearColor(0x000000, 1); // Fundo opaco
-        this.camera.position.set(0, 40, 20);
+        // --- ESTILO RESTAURADO: Fundo, Câmera e HDR ---
+        this.renderer.setClearColor(0x000000, 1);
+        this.camera.position.set(0, 40, 20); // Posição inicial correta
 
-        const hdrEquirect = await new RGBELoader().loadAsync('https://miroleon.github.io/daily-assets/gradient_13.hdr');
+        const hdrEquirect = await new RGBELoader().loadAsync('https://miroleon.github.io/daily-assets/gradient_4_comp.hdr');
         hdrEquirect.mapping = THREE.EquirectangularReflectionMapping;
         this.scene.environment = hdrEquirect;
         
+        // --- ESTILO RESTAURADO: Materiais ---
         const blobMaterial = new THREE.MeshPhysicalMaterial({
-            color: 0xffffff, roughness: 0.3, metalness: 0,
-            envMap: hdrEquirect, envMapIntensity: 5.5,
+            color: 0xffffff,
+            roughness: 0.3,
+            metalness: 0,
+            envMap: hdrEquirect,
+            envMapIntensity: 0.5,
         });
         const uniMaterial = new THREE.MeshPhysicalMaterial({
-            envMap: hdrEquirect, envMapIntensity: 200.5, emissive: 0x11151c,
+            envMap: hdrEquirect,
+            envMapIntensity: 10,
+            emissive: 0x11151c,
         });
         
         const loader = new FBXLoader();
@@ -59,12 +66,15 @@ export default class HopeGameplayScene {
         eyes.scale.setScalar(scale);
         this.scene.add(eyes);
 
-        this.scene.fog = new THREE.FogExp2(0x11151c, 0.015);
+        // --- ESTILO RESTAURADO: Névoa ---
+        
         
         const renderScene = new RenderPass(this.scene, this.camera);
         const afterimagePass = new AfterimagePass();
-        afterimagePass.uniforms['damp'].value = 0.85;
-        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.35, 0.1, 1);
+        afterimagePass.uniforms['damp'].value = 0.40;
+
+        // --- ESTILO RESTAURADO: Bloom Pass ---
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.15, 1, 0.1);
         
         this.composer = new EffectComposer(this.renderer);
         this.composer.addPass(renderScene);
@@ -76,20 +86,14 @@ export default class HopeGameplayScene {
 
         window.addEventListener('resize', this.resizeListener);
         window.addEventListener('click', this.clickListener);
-
-        this.backgroundMusic.loop = true;
-        this.backgroundMusic.play();
     }
 
     destroy() {
         console.log("Destruindo HopeGameplayScene");
-        this.backgroundMusic.pause();
-        this.backgroundMusic.currentTime = 0;
         window.removeEventListener('resize', this.resizeListener);
         window.removeEventListener('click', this.clickListener);
 
         if(this.memorySystem){
-            // Garante que todos os intervalos sejam limpos
             clearInterval(this.memorySystem.memorySpawner);
             clearInterval(this.memorySystem.progressDrainInterval);
         }
@@ -112,9 +116,11 @@ export default class HopeGameplayScene {
 
     update() {
         const delta = this.clock.getDelta();
+        // --- ESTILO RESTAURADO: Velocidade da animação ---
         if (this.bodyMixer) this.bodyMixer.update(delta / 2);
         if (this.eyesMixer) this.eyesMixer.update(delta / 2);
         
+        // --- ESTILO RESTAURADO: Movimento de câmara ---
         this.theta += 0.005;
         this.camera.position.x = -Math.sin(this.theta + 1) * 45;
         this.camera.position.z = -Math.cos(this.theta + 1) * 45;

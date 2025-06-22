@@ -7,6 +7,10 @@ import HopeWinGameScene from './Existence/scenes/HopeWinGameScene.js';
 let renderer, scenes, currentScene;
 let animationFrameId;
 
+// --- Gestor de música global ---
+const backgroundMusic = new Audio('./assets/backgroundmusic.mp3');
+backgroundMusic.loop = true; // Garante que a música recomece quando acabar
+
 function stopAnimate() {
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
@@ -45,7 +49,6 @@ window.addEventListener('DOMContentLoaded', () => {
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
 
-    // A lista de cenas é inicializada aqui
     scenes = {
         hands: new HandsScene(renderer),
         hopeDepressed: new HopeDepressedScene(renderer),
@@ -69,12 +72,26 @@ window.addEventListener('DOMContentLoaded', () => {
 
         textContainer?.classList.add('fade-out');
         menu?.classList.add('fade-out');
+        
+        // A música já terá começado com o primeiro clique
+        // O código de play() foi removido daqui
+
         setTimeout(() => {
             if(textContainer) textContainer.style.display = 'none';
             if(menu) menu.style.display = 'none';
         }, 500);
+        
         initScene('hopeGameplay');
     });
+
+    // --- NOVO: Toca a música na primeira interação do utilizador com a página ---
+    window.addEventListener('click', () => {
+        if (backgroundMusic.paused) {
+            backgroundMusic.play().catch(error => {
+                console.warn("A música não pôde ser reproduzida automaticamente:", error);
+            });
+        }
+    }, { once: true }); // A opção 'once' garante que isto só acontece uma vez.
 
     window.addEventListener('changeScene', (event) => {
         const { sceneName, ...sceneData } = event.detail;
@@ -85,10 +102,8 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- CORREÇÃO: Ouve o evento para recriar as cenas de fim de jogo ---
     window.addEventListener('resetGame', () => {
         console.log("A recriar cenas de fim de jogo para reiniciar o estado...");
-        // Substitui os objetos antigos por novos, garantindo um estado limpo
         scenes.hopeDepressed = new HopeDepressedScene(renderer);
         scenes.hopeWinGame = new HopeWinGameScene(renderer);
     });
