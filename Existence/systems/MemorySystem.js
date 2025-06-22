@@ -13,7 +13,89 @@ export default class MemorySystem {
         this.gameOver = false;
         this.memories = [];
         this.pointer = new THREE.Vector2();
+
+        // --- LÓGICA DAS PERGUNTAS ---
+        this.existentialQuestions = [
+            "Qual o significado de uma vida bem vivida?",
+            "O que acontece quando os sonhos desaparecem?",
+            "Somos mais do que a soma das nossas memórias?",
+            "Para onde vai a esperança quando a perdemos?",
+            "É possível encontrar luz na mais completa escuridão?",
+            "Por que continuamos lutando quando tudo parece perdido?",
+            "O que define quem realmente somos?",
+            "O vazio também faz parte da existência?",
+            "Como se preenche um abismo interior?",
+            "Qual o peso de um arrependimento?",
+            "A felicidade é um destino ou um caminho?",
+            "O que resta quando esquecemos nosso propósito?",
+            "Uma única memória pode mudar tudo?",
+            "Por que o silêncio às vezes é tão barulhento?",
+            "Como se perdoa a si mesmo?",
+            "O que é mais forte: o amor ou o tempo?",
+            "A saudade é o preço de ter vivido?",
+            "É preciso sentir dor para saber o que é alegria?",
+            "O que buscamos quando olhamos para as estrelas?",
+            "Se pudesse, você escolheria não sentir nada?"
+        ];
+        this.availableQuestions = [...this.existentialQuestions];
+        this.questionThreshold = 10;
+
+        // --- NOVA LÓGICA DE POSICIONAMENTO ---
+        // 1. A lista mestre de todas as posições possíveis.
+        this.allPositions = [
+            { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }, // Posição Central
+            { top: '15%', left: '50%', transform: 'translateX(-50%)' },      // Topo Central
+            { top: '50%', left: '25%', transform: 'translateY(-55%)' },      // Meio-Esquerda
+            { top: '50%', left: '80%', transform: 'translate(-100%, -50%)' },// Meio-Direita
+            { top: '85%', left: '50%', transform: 'translateX(-50%)' },      // Fundo Central
+            { top: '85%', left: '25%', transform: 'translateX(-50%)' },      // Fundo Esquerda
+            { top: '85%', left: '75%', transform: 'translateX(-50%)' },      // Fundo Direita
+        ];
+        // 2. Uma cópia da lista que será usada para os sorteios.
+        this.availablePositions = [...this.allPositions];
     }
+
+    displayExistentialQuestion() {
+        if (this.availableQuestions.length === 0) return;
+
+        // --- LÓGICA DE POSICIONAMENTO ATUALIZADA ---
+        // 3. Verifica se a lista de posições disponíveis está vazia.
+        if (this.availablePositions.length === 0) {
+            // 4. Se estiver vazia, "reenche" a lista para o próximo ciclo.
+            this.availablePositions = [...this.allPositions];
+        }
+
+        // 5. Sorteia uma posição da lista de *disponíveis*.
+        const randomPositionIndex = Math.floor(Math.random() * this.availablePositions.length);
+        const randomPosition = this.availablePositions[randomPositionIndex];
+        
+        // 6. Remove a posição sorteada da lista para não repetir.
+        this.availablePositions.splice(randomPositionIndex, 1);
+
+        const randomIndex = Math.floor(Math.random() * this.availableQuestions.length);
+        const question = this.availableQuestions[randomIndex];
+        this.availableQuestions.splice(randomIndex, 1);
+
+        const questionElement = document.createElement('div');
+        questionElement.className = 'existential-question';
+
+        Object.assign(questionElement.style, randomPosition);
+        
+        document.body.appendChild(questionElement);
+
+        const tl = gsap.timeline();
+        tl.to(questionElement, { opacity: 1, duration: 1.0, ease: 'power2.out' })
+          .to(questionElement, {
+                text: question,
+                duration: question.length * 0.07,
+                ease: 'none'
+            })
+          .to(questionElement, { opacity: 0, duration: 1.5, ease: 'power2.in' }, "+=3")
+          .call(() => {
+                questionElement.remove();
+            });
+    }
+
 
     createScoreDisplay() {
         if (this.scoreDisplay) this.scoreDisplay.remove();
@@ -40,6 +122,7 @@ export default class MemorySystem {
             this.progressContainer.appendChild(line);
         });
         const imgPaths = ['./assets/sprite_3.png', './assets/sprite_2.png', './assets/sprite_1.png', './assets/sprite_0.png'];
+        
         imgPaths.forEach((src, index) => {
             const img = document.createElement('img');
             img.src = src;
@@ -101,7 +184,6 @@ export default class MemorySystem {
             this.scene.add(memory);
             this.animateMemoryAppear(memory);
             
-
             const timeout = setTimeout(() => this.removeMemory(memory), this.memoryLifetime);
             this.memories.push({ object: memory, timeout: timeout });
         });
@@ -124,6 +206,11 @@ export default class MemorySystem {
             this.score++;
             this.progressValue += 6;
             this.animateGoodMemoryCollection(memoryObject);
+
+            if (this.score > 0 && this.score % this.questionThreshold === 0) {
+                this.displayExistentialQuestion();
+            }
+
         } else {
             const badSound = new Audio('./assets/badsound.mp3');
             badSound.volume = 0.1;
@@ -183,9 +270,8 @@ export default class MemorySystem {
 
         if (intersects.length > 0) {
             const memoryObject = intersects[0].object;
-            // Impede que o mesmo objeto seja clicado múltiplas vezes ---
             if (memoryObject.userData.isMemory) {
-                memoryObject.userData.isMemory = false; // "Desativa" o objeto imediatamente
+                memoryObject.userData.isMemory = false;
                 this.collectMemory(memoryObject);
             }
         }

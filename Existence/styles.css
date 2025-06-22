@@ -290,5 +290,16 @@ html, body {
   background-color: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.5);
 }
-
-
+/* Estilo para a pergunta existencial durante o jogo */
+.existential-question {
+  position: fixed;
+  color: white;
+  font-family: 'Fonte2', monospace;
+  font-size: 1.5rem;
+  text-align: center;
+  max-width: 80%;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+}

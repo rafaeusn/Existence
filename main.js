@@ -10,7 +10,7 @@ let animationFrameId;
 // --- Gestor de música global ---
 const backgroundMusic = new Audio('./assets/backgroundmusic.mp3');
 backgroundMusic.loop = true; // Garante que a música recomece quando acabar
-backgroundMusic.volume = 1.0; // --- VOLUME AJUSTADO: Aumenta o volume da música (0.0 a 1.0) ---
+backgroundMusic.volume = 1.0; 
 
 function stopAnimate() {
     if (animationFrameId) {
@@ -59,17 +59,88 @@ window.addEventListener('DOMContentLoaded', () => {
     
     currentScene = null;
 
+    // --- ALTERAÇÃO AQUI: Registra AMBOS os plugins que o projeto usa ---
+    gsap.registerPlugin(ScrollToPlugin, TextPlugin);
+
     const aboutContainer = document.getElementById("aboutContainer");
     const aboutButton = document.getElementById("aboutButton");
     const closeAbout = document.getElementById("closeAbout");
     const startButton = document.getElementById("startButton");
+    
+    const aboutContent = document.querySelector(".about-content");
 
-    aboutButton.addEventListener("click", () => aboutContainer.classList.toggle("visible"));
-    closeAbout.addEventListener("click", () => aboutContainer.classList.remove("visible"));
+    let aboutTextAnimation;
+    let scrollTween; 
+    let finalScrollUpTween;
+
+    // Variável de controle (flag) para a animação do "Sobre"
+    let hasAboutAnimationPlayed = false;
+
+    function killAllAboutAnimations() {
+        if (aboutTextAnimation) aboutTextAnimation.kill();
+        if (scrollTween) scrollTween.kill();
+        if (finalScrollUpTween) finalScrollUpTween.kill();
+    }
+
+    // Lógica para o menu Sobre
+    aboutButton.addEventListener("click", () => {
+        aboutContainer.classList.toggle("visible");
+
+        if (aboutContainer.classList.contains("visible")) {
+            aboutContent.scrollTop = 0;
+            
+            if (!hasAboutAnimationPlayed) {
+                hasAboutAnimationPlayed = true; 
+                
+                killAllAboutAnimations();
+
+                aboutTextAnimation = gsap.from(".about-content p", {
+                    delay: 0.5,
+                    duration: 1.2,
+                    opacity: 0,
+                    y: 20,
+                    ease: 'power3.out',
+                    stagger: {
+                        each: 1.2,
+                        onStart: function() {
+                            const currentParagraph = this.targets()[0];
+                            scrollTween = gsap.to(aboutContent, {
+                                scrollTo: { 
+                                    y: currentParagraph, 
+                                    offsetY: 20
+                                },
+                                duration: 1.0,
+                                ease: 'power2.inOut'
+                            });
+                        }
+                    },
+                    onComplete: () => {
+                        finalScrollUpTween = gsap.to(aboutContent, {
+                            delay: 0.2,
+                            duration: 1.0,
+                            scrollTop: 0,
+                            ease: 'power2.inOut'
+                        });
+                    }
+                });
+            }
+
+        } else {
+            killAllAboutAnimations();
+        }
+    });
+
+    closeAbout.addEventListener("click", () => {
+        aboutContainer.classList.remove("visible");
+        killAllAboutAnimations();
+    });
 
     startButton.addEventListener("click", () => {
         const textContainer = document.querySelector('.text-container');
         const menu = document.querySelector('.menu');
+
+        aboutContainer.classList.remove("visible");
+        killAllAboutAnimations();
 
         textContainer?.classList.add('fade-out');
         menu?.classList.add('fade-out');
@@ -82,6 +153,7 @@ window.addEventListener('DOMContentLoaded', () => {
         initScene('hopeGameplay');
     });
 
+    // ... resto do seu código ...
     window.addEventListener('click', () => {
         if (backgroundMusic.paused) {
             backgroundMusic.play().catch(error => {
