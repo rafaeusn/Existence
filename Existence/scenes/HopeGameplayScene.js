@@ -7,217 +7,122 @@ import { UnrealBloomPass } from 'https://cdn.skypack.dev/three@0.136.0/examples/
 import { FBXLoader } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/FBXLoader.js';
 import MemorySystem from '../systems/MemorySystem.js';
 
-export default class HopeGameplay {
-  constructor(canvasId = 'canvas') {
-    this.canvas = document.getElementById(canvasId);
-    this.renderer = new THREE.WebGLRenderer({ 
-      canvas: this.canvas, 
-      antialias: true,
-      alpha: true
-    });
-    this.clock = new THREE.Clock();
-    this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
+export default class HopeGameplayScene {
+    constructor(renderer) {
+        this.renderer = renderer; // Usa o renderer compartilhado
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.clock = new THREE.Clock();
+        
+        this.theta = 0;
+        this.composer = null;
+        this.memorySystem = null;
+        this.backgroundMusic = new Audio('./assets/backgroundmusic.mp3');
+        
+        this.resizeListener = this.onWindowResize.bind(this);
+        this.clickListener = (event) => {
+            if (this.memorySystem) this.memorySystem.onPointerClick(event);
+        };
+    }
 
-    // Modelos e animações
-    this.bodyMixer = null;
-    this.eyesMixer = null;
-    this.theta = 0;
-    this.scale = 0.03;
-    ;
+    async init() {
+        this.renderer.setClearColor(0x000000, 1); // Fundo opaco
+        this.camera.position.set(0, 40, 20);
 
-    // Som
-    this.backgroundMusic = new Audio('./assets/backgroundmusic.mp3');
-
-    // Pós-processamento
-    this.composer = null;
-
-
-    // Elementos UI
-    this.scoreDisplay = null;
-    this.gameOverDisplay = null;
-
-  }
-
-  async init() {
-    // Configuração do renderizador
-    this.renderer.setClearColor(0x11151c, 0); // Fundo transparente para o menu
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-
-
-
-    // Posição da câmera
-    this.camera.position.set(0, 40, 20);
-
-    // Carrega ambiente
-    await this.loadEnvironment();
-
-    // Configura materiais
-    this.setupMaterials();
-
-    // Carrega modelos
-    await this.loadModels();
-
-    // Configura névoa
-    this.setupFog();
-
-    // Configura pós-processamento
-    this.setupPostProcessing();
-
-
-    // Inicia UI e jogo
-    this.memorySystem = new MemorySystem(this.scene, this.camera, this.renderer, this.composer);
-
-    this.memorySystem.createScoreDisplay();
-
-    this.glow = this.memorySystem.glow; // Pega o valor de glow do MemorySystem
-
-    
-    // Event listeners
-    window.addEventListener('resize', this.onWindowResize.bind(this));
-    window.addEventListener('click', (event) => this.memorySystem.onPointerClick(event));
-
-
-    // Inicia animação
-    this.animate();
-    this.memorySystem.startMemoryGame();
-    this.backgroundMusic.loop = true;
-    this.backgroundMusic.play();
-
-  }
-
-
-
-    // TRY OTHER HDRs
-  //.load( 'https://miroleon.github.io/daily-assets/GRADIENT_01_01_comp.hdr', function () { - branco fortao
-  //.load( 'https://miroleon.github.io/daily-assets/gradient_13.hdr', function () { - escuro e laranja (mas acho que depende da cor)
-  //.load( 'https://miroleon.github.io/daily-assets/gradient_4_comp.hdr', function () {
-  //.load( 'https://miroleon.github.io/daily-assets/gradient_5_comp.hdr', function () {
-
-  async loadEnvironment(num) {
-    let hdrList = [
-      'https://miroleon.github.io/daily-assets/gradient.hdr',
-      'https://miroleon.github.io/daily-assets/GRADIENT_01_01_comp.hdr',
-      'https://miroleon.github.io/daily-assets/gradient_13.hdr',
-      'https://miroleon.github.io/daily-assets/gradient_4_comp.hdr',
-      'https://miroleon.github.io/daily-assets/gradient_5_comp.hdr'
-    ];
-    return new Promise((resolve) => {
-      const loader = new RGBELoader();
-      loader.load(hdrList[2], (hdrEquirect) => {
+        const hdrEquirect = await new RGBELoader().loadAsync('https://miroleon.github.io/daily-assets/gradient_13.hdr');
         hdrEquirect.mapping = THREE.EquirectangularReflectionMapping;
         this.scene.environment = hdrEquirect;
-        this.hdrEquirect = hdrEquirect; 
-        resolve();
-      });
-    });
-  }
+        
+        const blobMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0xffffff, roughness: 0.3, metalness: 0,
+            envMap: hdrEquirect, envMapIntensity: 5.5,
+        });
+        const uniMaterial = new THREE.MeshPhysicalMaterial({
+            envMap: hdrEquirect, envMapIntensity: 200.5, emissive: 0x11151c,
+        });
+        
+        const loader = new FBXLoader();
+        const scale = 0.03;
+        const body = await loader.loadAsync('https://miroleon.github.io/daily-assets/body_03.fbx');
+        this.bodyMixer = new THREE.AnimationMixer(body);
+        this.bodyMixer.clipAction(body.animations[0]).play();
+        body.traverse((child) => { if (child.isMesh) child.material = blobMaterial; });
+        body.position.set(0, -5, 0);
+        body.scale.setScalar(scale);
+        this.scene.add(body);
 
-  setupMaterials() {
-    this.blobMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xffffff,
-      roughness: 0.3,
-      metalness: 0,
-      envMap: this.hdrEquirect,
-      envMapIntensity: this.glow,
-    });
+        const eyes = await loader.loadAsync('https://miroleon.github.io/daily-assets/eyes_03.fbx');
+        this.eyesMixer = new THREE.AnimationMixer(eyes);
+        this.eyesMixer.clipAction(eyes.animations[0]).play();
+        eyes.traverse((child) => { if (child.isMesh) child.material = uniMaterial; });
+        eyes.position.set(0, -5, 0);
+        eyes.scale.setScalar(scale);
+        this.scene.add(eyes);
 
-    this.uniMaterial = new THREE.MeshPhysicalMaterial({
-      envMap: this.hdrEquirect,
-      envMapIntensity: 200.5,
-      emissive: 0x11151c,
-    });
-  }
+        this.scene.fog = new THREE.FogExp2(0x11151c, 0.015);
+        
+        const renderScene = new RenderPass(this.scene, this.camera);
+        const afterimagePass = new AfterimagePass();
+        afterimagePass.uniforms['damp'].value = 0.85;
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.35, 0.1, 1);
+        
+        this.composer = new EffectComposer(this.renderer);
+        this.composer.addPass(renderScene);
+        this.composer.addPass(afterimagePass);
+        this.composer.addPass(bloomPass);
 
-  async loadModels() {
-    const loader = new FBXLoader();
+        this.memorySystem = new MemorySystem(this.scene, this.camera, this.renderer, this.composer);
+        this.memorySystem.startMemoryGame();
 
-    // Carrega corpo
-    this.body = await loader.loadAsync('https://miroleon.github.io/daily-assets/body_03.fbx');
-    this.bodyMixer = new THREE.AnimationMixer(this.body);
-    const bodyAction = this.bodyMixer.clipAction(this.body.animations[0]);
-    bodyAction.play();
+        window.addEventListener('resize', this.resizeListener);
+        window.addEventListener('click', this.clickListener);
 
-    this.body.traverse((child) => {
-      if (child.isMesh) child.material = this.blobMaterial;
-    });
-    this.body.position.set(0, -5, 0);
-    this.body.scale.setScalar(this.scale);
-    this.scene.add(this.body);
+        this.backgroundMusic.loop = true;
+        this.backgroundMusic.play();
+    }
 
-    // Carrega olhos
-    this.eyes = await loader.loadAsync('https://miroleon.github.io/daily-assets/eyes_03.fbx');
-    this.eyesMixer = new THREE.AnimationMixer(this.eyes);
-    const eyesAction = this.eyesMixer.clipAction(this.eyes.animations[0]);
-    eyesAction.play();
+    destroy() {
+        console.log("Destruindo HopeGameplayScene");
+        this.backgroundMusic.pause();
+        this.backgroundMusic.currentTime = 0;
+        window.removeEventListener('resize', this.resizeListener);
+        window.removeEventListener('click', this.clickListener);
 
-    this.eyes.traverse((child) => {
-      if (child.isMesh) child.material = this.uniMaterial;
-    });
-    this.eyes.position.set(0, -5, 0);
-    this.eyes.scale.setScalar(this.scale);
-    this.scene.add(this.eyes);
-  }
+        if(this.memorySystem){
+            // Garante que todos os intervalos sejam limpos
+            clearInterval(this.memorySystem.memorySpawner);
+            clearInterval(this.memorySystem.progressDrainInterval);
+        }
 
-  setupFog() {
-    this.scene.fog = new THREE.FogExp2(0x11151c, 0.015);
-  }
+        this.scene.traverse(object => {
+            if (object.isMesh) {
+                if (object.geometry) object.geometry.dispose();
+                if (object.material) object.material.dispose();
+            }
+        });
+        this.scene.clear();
+    }
 
-  setupPostProcessing() {
-    const renderScene = new RenderPass(this.scene, this.camera);
-    const afterimagePass = new AfterimagePass();
-    afterimagePass.uniforms['damp'].value = 0.85;
+    onWindowResize() {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.composer.setSize(window.innerWidth, window.innerHeight);
+    }
 
-    const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(window.innerWidth, window.innerHeight),
-      1.35, // strength
-      0.1,  // threshold
-      1     // radius
-    );
+    update() {
+        const delta = this.clock.getDelta();
+        if (this.bodyMixer) this.bodyMixer.update(delta / 2);
+        if (this.eyesMixer) this.eyesMixer.update(delta / 2);
+        
+        this.theta += 0.005;
+        this.camera.position.x = -Math.sin(this.theta + 1) * 45;
+        this.camera.position.z = -Math.cos(this.theta + 1) * 45;
+        this.camera.position.y = 20 * Math.cos(this.theta + 1) + 20;
+        this.camera.lookAt(0, 5, 0);
+    }
 
-    this.composer = new EffectComposer(this.renderer);
-    this.composer.addPass(renderScene);
-    this.composer.addPass(afterimagePass);
-    this.composer.addPass(bloomPass);
-  }
-
-  /* SISTEMA DE MEMÓRIAS */
-
-
-  /* ANIMAÇÃO E RENDERIZAÇÃO */
-  update() {
-    this.theta += 0.005;
-    this.camera.position.x = -Math.sin(this.theta + 1) * 45;
-    this.camera.position.z = -Math.cos(this.theta + 1) * 45;
-    this.camera.position.y = 20 * Math.cos(this.theta + 1) + 20;
-    this.camera.lookAt(0, 5, 0);
-  }
-
-  onWindowResize() {
-    this.camera.aspect = window.innerWidth / window.innerHeight;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.composer.setSize(window.innerWidth, window.innerHeight);
-  }
-
-  animate() {
-    requestAnimationFrame(this.animate.bind(this));
-
-    const delta = this.clock.getDelta();
-    
-    // Atualiza animações
-    if (this.bodyMixer) this.bodyMixer.update(delta / 2);
-    if (this.eyesMixer) this.eyesMixer.update(delta / 2);
-    
-    // Atualiza cena
-    this.update();
-    
-    this.render();
-  }
-  render(){
-    // Renderiza
- this.renderer.render(this.scene, this.camera);
-
-  }
+    render() {
+        if (this.composer) this.composer.render();
+    }
 }

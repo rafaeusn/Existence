@@ -1,72 +1,97 @@
+import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
 import HandsScene from './Existence/scenes/HandsScene.js';
 import HopeDepressedScene from './Existence/scenes/HopeDepressedScene.js';
 import HopeGameplayScene from './Existence/scenes/HopeGameplayScene.js';
+import HopeWinGameScene from './Existence/scenes/HopeWinGameScene.js';
 
+let renderer, scenes, currentScene;
+let animationFrameId;
 
-window.addEventListener('DOMContentLoaded', () => {
-  const aboutContainer = document.getElementById("aboutContainer");
-  const aboutButton = document.getElementById("aboutButton");
-  const closeAbout = document.getElementById("closeAbout");
-  const startButton = document.getElementById("startButton");
+function stopAnimate() {
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
+}
 
-  aboutButton.addEventListener("click", () => {
-    aboutContainer.classList.toggle("visible");
-  });
-
-  closeAbout.addEventListener("click", () => {
-    aboutContainer.classList.remove("visible");
-  });
-
-  startButton.addEventListener("click", () => {
-  console.log('Iniciando a cena: hopeGameplay');
-
-  const textContainer = document.querySelector('.text-container');
-  const menu = document.querySelector('.menu');
-
-  // Faz o texto sumir suavemente
-  textContainer.classList.add('fade-out');
-
-  // Faz o menu sumir suavemente
-  menu.classList.add('fade-out');
-
-  // Depois de meio segundo, oculta os dois de vez
-  setTimeout(() => {
-    textContainer.style.display = 'none';
-    menu.style.display = 'none';
-  }, 500);
-
-  // Inicia a cena
-  initScene('hopeGameplay');
-});
-});
-
-console.log('Existence game loaded');
-
-const scenes = {
-    hands: new HandsScene(),
-    hopeDepressed: new HopeDepressedScene(),
-    hopeGameplay: new HopeGameplayScene()
-};
-
-let currentScene = null;
-
-async function initScene(sceneName) {
+function animate() {
     if (currentScene) {
-        console.log(`Mudando para a cena: ${sceneName}`);
+        currentScene.update();
+        currentScene.render();
+    }
+    animationFrameId = requestAnimationFrame(animate);
+}
+
+async function initScene(sceneName, sceneData = {}) {
+    stopAnimate();
+    if (currentScene && typeof currentScene.destroy === 'function') {
+        currentScene.destroy();
     }
     
     currentScene = scenes[sceneName];
-    await currentScene.init();
+    if (!currentScene) {
+        console.error(`A cena "${sceneName}" não existe! Verifique o nome.`);
+        return;
+    }
+    await currentScene.init(sceneData); 
     
     document.getElementById('preloader').style.display = 'none';
     animate();
 }
 
-function animate() {
-    currentScene.update();
-    currentScene.render();
-    requestAnimationFrame(animate);
-}
+window.addEventListener('DOMContentLoaded', () => {
+    const canvas = document.getElementById('canvas');
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
-// Inicializa já com a cena "hands"
-initScene('hands');
+    // A lista de cenas é inicializada aqui
+    scenes = {
+        hands: new HandsScene(renderer),
+        hopeDepressed: new HopeDepressedScene(renderer),
+        hopeGameplay: new HopeGameplayScene(renderer),
+        hopeWinGame: new HopeWinGameScene(renderer) 
+    };
+    
+    currentScene = null;
+
+    const aboutContainer = document.getElementById("aboutContainer");
+    const aboutButton = document.getElementById("aboutButton");
+    const closeAbout = document.getElementById("closeAbout");
+    const startButton = document.getElementById("startButton");
+
+    aboutButton.addEventListener("click", () => aboutContainer.classList.toggle("visible"));
+    closeAbout.addEventListener("click", () => aboutContainer.classList.remove("visible"));
+
+    startButton.addEventListener("click", () => {
+        const textContainer = document.querySelector('.text-container');
+        const menu = document.querySelector('.menu');
+
+        textContainer?.classList.add('fade-out');
+        menu?.classList.add('fade-out');
+        setTimeout(() => {
+            if(textContainer) textContainer.style.display = 'none';
+            if(menu) menu.style.display = 'none';
+        }, 500);
+        initScene('hopeGameplay');
+    });
+
+    window.addEventListener('changeScene', (event) => {
+        const { sceneName, ...sceneData } = event.detail;
+        if (scenes[sceneName]) {
+            initScene(sceneName, sceneData);
+        } else {
+            console.error(`Cena "${sceneName}" não encontrada!`);
+        }
+    });
+
+    // --- CORREÇÃO: Ouve o evento para recriar as cenas de fim de jogo ---
+    window.addEventListener('resetGame', () => {
+        console.log("A recriar cenas de fim de jogo para reiniciar o estado...");
+        // Substitui os objetos antigos por novos, garantindo um estado limpo
+        scenes.hopeDepressed = new HopeDepressedScene(renderer);
+        scenes.hopeWinGame = new HopeWinGameScene(renderer);
+    });
+
+    initScene('hands');
+});
