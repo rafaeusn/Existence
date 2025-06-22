@@ -102,14 +102,22 @@ export default class MemorySystem {
         clearTimeout(memory.timeout);
         
         if (memory.isGood) {
-            new Audio('./assets/goodsound.mp3').play();
+            // --- VOLUME AJUSTADO ---
+            const goodSound = new Audio('./assets/goodsound.mp3');
+            goodSound.volume = 0.1; // Volume mais baixo (0.0 a 1.0)
+            goodSound.play();
+            
             this.score++;
-            this.progressValue += 10;
+            this.progressValue += 6;
             this.animateGoodMemoryCollection(memory.object);
         } else {
-            new Audio('./assets/badsound.mp3').play();
+            // --- VOLUME AJUSTADO ---
+            const badSound = new Audio('./assets/badsound.mp3');
+            badSound.volume = 0.1; // Volume mais baixo (0.0 a 1.0)
+            badSound.play();
+
             this.badMemories++;
-            this.progressValue -= 5;
+            this.progressValue -= 10;
             this.animateBadMemoryCollection(memory.object);
         }
         

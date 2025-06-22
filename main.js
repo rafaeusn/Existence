@@ -10,6 +10,7 @@ let animationFrameId;
 // --- Gestor de música global ---
 const backgroundMusic = new Audio('./assets/backgroundmusic.mp3');
 backgroundMusic.loop = true; // Garante que a música recomece quando acabar
+backgroundMusic.volume = 1.0; // --- VOLUME AJUSTADO: Aumenta o volume da música (0.0 a 1.0) ---
 
 function stopAnimate() {
     if (animationFrameId) {
