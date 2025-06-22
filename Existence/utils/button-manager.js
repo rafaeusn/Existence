@@ -17,7 +17,7 @@ export function createEndGameScreen(message, score, onRestartCallback) {
 
     endScreen.innerHTML = `
         <p>${message}</p>
-        <p>Memórias boas: ${score}</p>
+        <p>Memórias boas: <strong>${score}</strong></p>
         <button id="restartButton">Jogar Novamente</button>
     `;
 
