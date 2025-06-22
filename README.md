@@ -1,4 +1,4 @@
-                                                                EXISTENCE
+                                                        EXISTENCE
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 No limiar da consciência, onde o pensamento se torna um eco e o sentimento um abismo, reside a Crise Existencial.
 Não é uma batalha em campos distantes, mas uma guerra silenciosa travada no âmago da mente, um vazio que ameaça consumir tudo.
@@ -21,7 +21,7 @@ Ou será a sua chama extinta, perdida para sempre num vazio imensurável de depr
 O destino da Esperança está nas suas mãos.
 
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
-                                                              COMO INSTALAR
+                                                       COMO INSTALAR
                                                               
 1. Baixar o projeto: Code > Download Zip, (Ou clonar o repositório).
 2. Com o projeto aberto corretamente/extraído no seu VSCode, baixar a extensão "Live Server"
