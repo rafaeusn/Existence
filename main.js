@@ -59,7 +59,6 @@ window.addEventListener('DOMContentLoaded', () => {
     
     currentScene = null;
 
-    // --- ALTERAÇÃO AQUI: Registra AMBOS os plugins que o projeto usa ---
     gsap.registerPlugin(ScrollToPlugin, TextPlugin);
 
     const aboutContainer = document.getElementById("aboutContainer");
@@ -72,14 +71,17 @@ window.addEventListener('DOMContentLoaded', () => {
     let aboutTextAnimation;
     let scrollTween; 
     let finalScrollUpTween;
-
-    // Variável de controle (flag) para a animação do "Sobre"
     let hasAboutAnimationPlayed = false;
 
     function killAllAboutAnimations() {
         if (aboutTextAnimation) aboutTextAnimation.kill();
         if (scrollTween) scrollTween.kill();
         if (finalScrollUpTween) finalScrollUpTween.kill();
+
+        // --- CORREÇÃO IMPORTANTE ---
+        // Limpa instantaneamente os estilos (opacity, transform) aplicados pela animação.
+        // Isso garante que, se o menu for aberto novamente, o texto estará 100% visível.
+        gsap.set(".about-content p", { clearProps: "all" });
     }
 
     // Lógica para o menu Sobre
@@ -124,7 +126,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             }
-
         } else {
             killAllAboutAnimations();
         }
