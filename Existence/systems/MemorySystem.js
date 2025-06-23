@@ -25,7 +25,7 @@ export default class MemorySystem {
             "O que define quem realmente somos?",
             "O vazio também faz parte da existência?",
             "Como se preenche um abismo interior?",
-            "Para reconstruir, é preciso primeiro aceitar que estamos quebrados?",
+            "Para reconstruir, é preciso aceitar que estamos quebrados?",
             "Se ninguém estivesse olhando, você ainda seria a mesma pessoa?",
             "O que resta quando esquecemos nosso propósito?",
             "Vivemos o momento, ou apenas esperamos ansiosamente pelo próximo?",
@@ -42,11 +42,9 @@ export default class MemorySystem {
 
         // LÓGICA DE POSICIONAMENTO ---
         this.allPositions = [
-            { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }, // Posição Central
-            { top: '15%', left: '50%', transform: 'translateX(-50%)' },      // Topo Central
-            { top: '50%', left: '25%', transform: 'translateY(-55%)' },      // Meio-Esquerda
+            { top: '10%', left: '50%', transform: 'translateX(-50%)' },      // Topo Central
+            { top: '50%', left: '10%', transform: 'translateY(-50%)' },      // Meio-Esquerda
             { top: '50%', left: '80%', transform: 'translate(-100%, -50%)' },// Meio-Direita
-            { top: '85%', left: '50%', transform: 'translateX(-50%)' },      // Fundo Central
             { top: '85%', left: '25%', transform: 'translateX(-50%)' },      // Fundo Esquerda
             { top: '85%', left: '75%', transform: 'translateX(-50%)' },      // Fundo Direita
         ];
