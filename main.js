@@ -78,9 +78,6 @@ window.addEventListener('DOMContentLoaded', () => {
         if (scrollTween) scrollTween.kill();
         if (finalScrollUpTween) finalScrollUpTween.kill();
 
-        // --- CORREÇÃO IMPORTANTE ---
-        // Limpa instantaneamente os estilos (opacity, transform) aplicados pela animação.
-        // Isso garante que, se o menu for aberto novamente, o texto estará 100% visível.
         gsap.set(".about-content p", { clearProps: "all" });
     }
 
@@ -154,7 +151,6 @@ window.addEventListener('DOMContentLoaded', () => {
         initScene('hopeGameplay');
     });
 
-    // ... resto do seu código ...
     window.addEventListener('click', () => {
         if (backgroundMusic.paused) {
             backgroundMusic.play().catch(error => {

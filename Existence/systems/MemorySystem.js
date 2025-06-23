@@ -40,8 +40,7 @@ export default class MemorySystem {
         this.availableQuestions = [...this.existentialQuestions];
         this.questionThreshold = 10;
 
-        // --- NOVA LÓGICA DE POSICIONAMENTO ---
-        // 1. A lista mestre de todas as posições possíveis.
+        // LÓGICA DE POSICIONAMENTO ---
         this.allPositions = [
             { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }, // Posição Central
             { top: '15%', left: '50%', transform: 'translateX(-50%)' },      // Topo Central
@@ -51,25 +50,25 @@ export default class MemorySystem {
             { top: '85%', left: '25%', transform: 'translateX(-50%)' },      // Fundo Esquerda
             { top: '85%', left: '75%', transform: 'translateX(-50%)' },      // Fundo Direita
         ];
-        // 2. Uma cópia da lista que será usada para os sorteios.
+        // Uma cópia da lista que será usada para os sorteios.
         this.availablePositions = [...this.allPositions];
     }
 
     displayExistentialQuestion() {
         if (this.availableQuestions.length === 0) return;
 
-        // --- LÓGICA DE POSICIONAMENTO ATUALIZADA ---
-        // 3. Verifica se a lista de posições disponíveis está vazia.
+        // LÓGICA DE POSICIONAMENTO
+        // Verifica se a lista de posições disponíveis está vazia.
         if (this.availablePositions.length === 0) {
-            // 4. Se estiver vazia, "reenche" a lista para o próximo ciclo.
+            // Se estiver vazia, "reenche" a lista para o próximo ciclo.
             this.availablePositions = [...this.allPositions];
         }
 
-        // 5. Sorteia uma posição da lista de *disponíveis*.
+        // Sorteia uma posição da lista de *disponíveis*.
         const randomPositionIndex = Math.floor(Math.random() * this.availablePositions.length);
         const randomPosition = this.availablePositions[randomPositionIndex];
         
-        // 6. Remove a posição sorteada da lista para não repetir.
+        // Remove a posição sorteada da lista para não repetir.
         this.availablePositions.splice(randomPositionIndex, 1);
 
         const randomIndex = Math.floor(Math.random() * this.availableQuestions.length);
