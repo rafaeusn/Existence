@@ -30,7 +30,7 @@ export default class HandsScene {
         hdrEquirect.mapping = THREE.EquirectangularReflectionMapping;
         this.scene.environment = hdrEquirect;
 
-        // Carrega o modelo com o material e textura corretos
+        // Carrega o modelo com o material e textura
         await this.loadHandsModel();
 
         const renderPass = new RenderPass(this.scene, this.camera);

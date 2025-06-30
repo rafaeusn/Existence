@@ -146,8 +146,7 @@ export default class HopeWinGameScene {
         
         if (this.cameraStopped && !this.buttonCreated) {
             this.buttonCreated = true;
-
-            // --- LÓGICA PARA RECOMEÇAR A ANDAR ---
+            
             if(this.body_01_action) this.body_01_action.paused = false;
             if(this.eyes_01_action) this.eyes_01_action.paused = false;
             

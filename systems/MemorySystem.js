@@ -14,7 +14,7 @@ export default class MemorySystem {
         this.memories = [];
         this.pointer = new THREE.Vector2();
 
-        // --- LÓGICA DAS PERGUNTAS ---
+        // PERGUNTAS
         this.existentialQuestions = [
             "Na vida, só temos certeza da morte, por que então continuamos?",
             "O que acontece quando os sonhos desaparecem?",
@@ -40,13 +40,13 @@ export default class MemorySystem {
         this.availableQuestions = [...this.existentialQuestions];
         this.questionThreshold = 10;
 
-        // LÓGICA DE POSICIONAMENTO ---
+        // POSICIONAMENTO
         this.allPositions = [
-            { top: '10%', left: '50%', transform: 'translateX(-50%)' },      // Topo Central
-            { top: '50%', left: '10%', transform: 'translateY(-50%)' },      // Meio-Esquerda
+            { top: '10%', left: '50%', transform: 'translateX(-50%)' },       // Topo Central
+            { top: '50%', left: '10%', transform: 'translateY(-50%)' },       // Meio-Esquerda
             { top: '50%', left: '80%', transform: 'translate(-100%, -50%)' },// Meio-Direita
-            { top: '85%', left: '25%', transform: 'translateX(-50%)' },      // Fundo Esquerda
-            { top: '85%', left: '75%', transform: 'translateX(-50%)' },      // Fundo Direita
+            { top: '85%', left: '25%', transform: 'translateX(-50%)' },       // Fundo Esquerda
+            { top: '85%', left: '75%', transform: 'translateX(-50%)' },       // Fundo Direita
         ];
         // Uma cópia da lista que será usada para os sorteios.
         this.availablePositions = [...this.allPositions];
@@ -55,10 +55,9 @@ export default class MemorySystem {
     displayExistentialQuestion() {
         if (this.availableQuestions.length === 0) return;
 
-        // LÓGICA DE POSICIONAMENTO
+        // POSICIONAMENTO
         // Verifica se a lista de posições disponíveis está vazia.
         if (this.availablePositions.length === 0) {
-            // Se estiver vazia, "reenche" a lista para o próximo ciclo.
             this.availablePositions = [...this.allPositions];
         }
 
@@ -82,13 +81,13 @@ export default class MemorySystem {
 
         const tl = gsap.timeline();
         tl.to(questionElement, { opacity: 1, duration: 1.0, ease: 'power2.out' })
-          .to(questionElement, {
+            .to(questionElement, {
                 text: question,
                 duration: question.length * 0.07,
                 ease: 'none'
             })
-          .to(questionElement, { opacity: 0, duration: 1.5, ease: 'power2.in' }, "+=3")
-          .call(() => {
+            .to(questionElement, { opacity: 0, duration: 1.5, ease: 'power2.in' }, "+=3")
+            .call(() => {
                 questionElement.remove();
             });
     }
@@ -295,9 +294,65 @@ export default class MemorySystem {
         fadeOut();
     }
 
-    startMemoryGame() { if (this.memorySpawner) clearInterval(this.memorySpawner); if (this.progressDrainInterval) clearInterval(this.progressDrainInterval); this.memories.forEach(memory => { clearTimeout(memory.timeout); if (memory.object.parent) this.scene.remove(memory.object); }); this.memories = []; this.score = 0; this.badMemories = 0; this.progressValue = 50; this.gameOver = false; this.createScoreDisplay(); this.createProgressBar(); this.updateScoreDisplay(); this.updateProgressBar(); this.spawnMemory(); this.memorySpawner = setInterval(() => { if (!this.gameOver) this.spawnMemory(); }, this.memoryInterval); this.progressDrainInterval = setInterval(() => { if (!this.gameOver) { this.progressValue -= 0.6; this.updateProgressBar(); } }, 200); }
-    endGame(message, isWin) { if (this.gameOver) return; this.gameOver = true; clearInterval(this.memorySpawner); clearInterval(this.progressDrainInterval); this.scoreDisplay?.remove(); this.progressContainer?.remove(); document.querySelectorAll('.progress-icon').forEach(icon => icon.remove()); this.memories.forEach(memory => { clearTimeout(memory.timeout); if (memory.object.parent) this.scene.remove(memory.object); }); this.memories = []; const targetScene = isWin ? 'hopeWinGame' : 'hopeDepressed'; const event = new CustomEvent('changeScene', { detail: { sceneName: targetScene, message: message, score: this.score } }); window.dispatchEvent(event); }
-    onPointerClick(event) { this.pointer.x = (event.clientX / window.innerWidth) * 2 - 1; this.pointer.y = -(event.clientY / window.innerHeight) * 2 + 1; this.checkMemoryIntersection(); }
-    animateMemoryAppear(memory) { const scaleUp = { x: 1.5, y: 1.5 }; const targetScale = { x: 3.0, y: 3.0 }; const animate = () => { if (!memory.parent) return; scaleUp.x += (targetScale.x - scaleUp.x) * 0.2; scaleUp.y += (targetScale.y - scaleUp.y) * 0.2; memory.scale.set(scaleUp.x, scaleUp.y, 1); if (Math.abs(scaleUp.x - targetScale.x) > 0.01) requestAnimationFrame(animate); }; animate(); }
-    getViewportSizeAtZ(z) { const fov = this.camera.fov * (Math.PI / 180); const height = 2 * Math.tan(fov / 2) * Math.abs(z - this.camera.position.z); const width = height * this.camera.aspect; return { width, height }; }
+    startMemoryGame() {
+        if (this.memorySpawner) clearInterval(this.memorySpawner);
+        if (this.progressDrainInterval) clearInterval(this.progressDrainInterval);
+        this.memories.forEach(memory => {
+            clearTimeout(memory.timeout);
+            if (memory.object.parent)
+                this.scene.remove(memory.object);
+        });
+        this.memories = [];
+        this.score = 0;
+        this.badMemories = 0;
+        this.progressValue = 50;
+        this.gameOver = false;
+        this.createScoreDisplay();
+        this.createProgressBar();
+        this.updateScoreDisplay();
+        this.updateProgressBar();
+        this.spawnMemory();
+        this.memorySpawner = setInterval(() => { if (!this.gameOver) this.spawnMemory(); },
+            this.memoryInterval);
+        this.progressDrainInterval = setInterval(() => {
+            if (!this.gameOver) {
+                this.progressValue -= 0.6;
+                this.updateProgressBar();
+            }
+        }, 200);
+    }
+    endGame(message, isWin) {
+        if (this.gameOver) return;
+        this.gameOver = true;
+        clearInterval(this.memorySpawner);
+        clearInterval(this.progressDrainInterval);
+        this.scoreDisplay?.remove(); this.progressContainer?.remove();
+        document.querySelectorAll('.progress-icon').forEach(icon => icon.remove());
+        this.memories.forEach(memory => {
+            clearTimeout(memory.timeout);
+            if (memory.object.parent) this.scene.remove(memory.object);
+        }); this.memories = [];
+        const targetScene = isWin ? 'hopeWinGame' : 'hopeDepressed';
+        const event = new CustomEvent('changeScene', { detail: { sceneName: targetScene, message: message, score: this.score } });
+        window.dispatchEvent(event);
+    }
+    onPointerClick(event) {
+        this.pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+        this.pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        this.checkMemoryIntersection();
+    }
+
+    animateMemoryAppear(memory) {
+        const scaleUp = { x: 1.5, y: 1.5 }; const targetScale = { x: 3.0, y: 3.0 }; const animate = () => {
+            if (!memory.parent) return; scaleUp.x += (targetScale.x - scaleUp.x) * 0.2; scaleUp.y += (targetScale.y - scaleUp.y) * 0.2;
+            memory.scale.set(scaleUp.x, scaleUp.y, 1);
+            if (Math.abs(scaleUp.x - targetScale.x) > 0.01) requestAnimationFrame(animate);
+        }; animate();
+    }
+    getViewportSizeAtZ(z) {
+        const fov = this.camera.fov * (Math.PI / 180);
+        const height = 2 * Math.tan(fov / 2) * Math.abs(z - this.camera.position.z);
+        const width = height * this.camera.aspect;
+        return { width, height };
+    }
 }

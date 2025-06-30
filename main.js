@@ -1,13 +1,13 @@
 import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
-import HandsScene from './Existence/scenes/HandsScene.js';
-import HopeDepressedScene from './Existence/scenes/HopeDepressedScene.js';
-import HopeGameplayScene from './Existence/scenes/HopeGameplayScene.js';
-import HopeWinGameScene from './Existence/scenes/HopeWinGameScene.js';
+import HandsScene from './scenes/HandsScene.js';
+import HopeDepressedScene from './scenes/HopeDepressedScene.js'; 
+import HopeGameplayScene from './scenes/HopeGameplayScene.js'; 
+import HopeWinGameScene from './scenes/HopeWinGameScene.js'; 
 
 let renderer, scenes, currentScene;
 let animationFrameId;
 
-// --- Gestor de música global ---
+
 const backgroundMusic = new Audio('./assets/backgroundmusic.mp3');
 backgroundMusic.loop = true; // Garante que a música recomece quando acabar
 backgroundMusic.volume = 1.0; 
